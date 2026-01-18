@@ -1,0 +1,2 @@
+# lattifai-skills
+LattifAI skills
