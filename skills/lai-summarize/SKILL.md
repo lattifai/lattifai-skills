@@ -1,254 +1,96 @@
 ---
 name: lai-summarize
 model: sonnet
-description: Use when generating a summary from captions, transcripts, or audio content. Agent-driven summarization using the agent's own LLM ability for highest quality. Falls back to CLI when needed. Use this skill whenever the user has a transcript, podcast, interview, or long caption file and wants a condensed overview, chapter summary, or key takeaways. Also triggers on "summarize", "生成摘要", "总结内容", "write summary", "episode summary", "总结这个播客", "what was discussed", "give me the highlights", "TL;DR", even if they just say "this transcript is really long, what are the main points?".
+description: Summarize a transcript, podcast, or long caption file into structured markdown (TL;DR, chapters with timestamps, quotes, entities). Trigger on "summarize", "生成摘要", "总结", "TL;DR", "episode summary", "what was discussed", or when the user has a long caption and wants key points. Agent reads the file directly; falls back to `lai summarize caption` CLI for very large files.
 ---
 
 # Content Summarizer
 
-**Agent-driven summarization.** The agent reads transcripts/captions and
-writes structured summaries directly -- no external LLM API call by default.
-Falls back to `lai summarize caption` (CLI with configurable LLM backend)
-when the agent cannot process the content directly (e.g., very large files).
+Agent-driven summary of transcripts and captions. Output is markdown with YAML frontmatter — chapters, quotes, entities, SEO metadata.
 
-## When to Use
+## Inputs
 
-- Summarize podcast episodes, interviews, lectures, meetings
-- Generate chapter-based summaries with timestamps
-- Create TL;DR from long transcripts
-- Produce SEO-friendly titles and descriptions
-- Extract key entities (people, concepts, organizations)
+Accepts JSON (`supervisions[]` from `/lai-align` or `/lai-diarize`), SRT, VTT, ASS, Gemini-style markdown, or plain text.
 
-## When NOT to Use
-
-- Need full transcription -- use `/lai-transcribe`
-- Need translation -- use `/lai-translate`
-- Need speaker identification -- use `/lai-diarize` (summarize after)
-- Input is not audio/caption content (articles, web pages)
+Optional `meta.md` beside the source enriches the summary. **If `meta.md` defines `chapters:`, those titles and timestamps are hard constraints** — no merge, split, or rename.
 
 ## Parameters
 
-| Parameter | Values | Default |
-|-----------|--------|---------|
-| `<source>` | Path to caption/transcript file | required |
-| `--output <path>` | Output summary file path | `<source>.summary.md` |
-| `--meta <path>` | Path to meta.md for episode metadata | auto-detect |
-| `--lang <code>` | Summary language | source language |
-| `--length <l>` | `short` \| `medium` \| `long` | `medium` |
-| `--format <f>` | `markdown` \| `json` | `markdown` |
+- `<source>` — caption/transcript file (required)
+- `--output <path>` — default `<source>.summary.md`
+- `--meta <path>` — episode metadata (auto-detected beside source)
+- `--lang <code>` — summary language (default: source language)
+- `--length short|medium|long` — ≈ 200–400 / 500–1000 / 1000–2000 words (default `medium`)
+- `--format markdown|json` — default `markdown`
 
-Length semantics:
-
-| Length | Approximate Output |
-|--------|--------------------|
-| `short` | 200-400 words, 1 paragraph TL;DR + entity list |
-| `medium` | 500-1000 words, chapters + quotes + entities |
-| `long` | 1000-2000 words, detailed chapter summaries + full entity list |
-
-## Output Schema (Markdown)
+## Output Schema
 
 ```markdown
 ---
 title: "Episode Title"
-seo_title: "SEO-Optimized Title (<=60 chars)"
-seo_description: "One-sentence description (<=160 chars)"
-tags: ["tag1", "tag2", "tag3"]
+seo_title: "SEO title (≤60 chars)"
+seo_description: "One-sentence description (≤160 chars)"
+tags: ["tag1", "tag2"]             # 4–8 tags
 chapters:
-  - title: "Chapter Title"
-    start: 10.0
-    end: 52.0
-  - title: "Next Chapter"
-    start: 52.0
-    end: 180.0
-confidence: 0.85
-source_quality: high
+  - { title: "Chapter Title", start: 10.0, end: 52.0 }
+confidence: 0.85                    # 0.0–1.0 self-assessment
+source_quality: high                # high | medium | low
 ---
 
-One-paragraph TL;DR of the entire content -- 2-4 sentences, active voice.
+TL;DR paragraph (2–4 sentences, active voice).
 
 ## [00:10] Chapter Title
+Summary paragraph(s).
 
-Summary paragraphs for this chapter, including key points discussed.
-
-> *"Verbatim quote from the transcript, <=40 words"*
-
-## [00:52] Next Chapter
-
-Summary of the next section...
+> *"Verbatim quote, ≤40 words."*
 
 ## Entities
 
-- **Person Name** (Person): role or one-line context
-- **Concept** (Concept): brief explanation
-- **Organization** (Organization): one-line context
+- **Name** (Person|Concept|Organization): one-line context
 ```
 
-## Workflow
+## Validation Before Writing
 
-### Step 1 -- Read source content
+- Frontmatter is valid YAML
+- Chapter headers match `chapters[]` in order
+- Hard-constraint `start` / `end` unchanged
+- No empty chapter bodies
+- Every quote appears verbatim in the source
+- `tags[]` has 4–8 items; SEO fields within limits
 
-Read the transcript/caption file. Supported inputs:
-- JSON with `supervisions[]` (from alignment/diarization)
-- SRT, VTT, ASS (subtitle files)
-- Markdown (Gemini-style transcripts)
-- Plain text (no timing)
+## CLI Fallback (large files)
 
-Determine:
-- Total duration and segment count
-- Whether speakers are labeled
-- Whether timestamps exist
-- Source language
-
-### Step 2 -- Gather metadata (optional)
-
-If a `.meta.md` file exists alongside the source (or user provides one):
-- Extract title, channel, speakers, duration
-- Extract YouTube chapters (if present) -- these become **hard constraints**
-
-**Chapter fidelity rule**: If `meta.md` has chapters, the summary MUST
-use those exact chapter titles and timestamps. No merging, splitting,
-reordering, or renaming. The body paragraphs within each chapter are
-generated by the agent.
-
-If no meta.md: the agent generates 1-8 chapters by identifying natural
-topic shifts.
-
-### Step 3 -- Generate summary
-
-For each chapter:
-1. Slice relevant segments by timestamp
-2. Identify 1-3 key points
-3. Select 1 quotable segment (short, self-contained, thesis-revealing)
-4. Write 1-3 summary paragraphs
-
-Additional sections:
-- **TL;DR**: 2-4 sentence overview at the top
-- **Entities**: 3-8 entries covering persons, concepts, organizations
-
-Quality markers:
-- `confidence`: 0.0-1.0 self-assessment
-  - `0.9+`: clear domain, clean transcript, hard-constraint chapters
-  - `0.75-0.89`: agent-generated chapters, clear topic flow
-  - `0.5-0.74`: ambiguous segments, speculative chaptering
-- `source_quality`: `high` / `medium` / `low`
-  - `high`: complete transcript with speakers + clean prose
-  - `medium`: mild ASR errors or missing speaker labels
-  - `low`: heavily noisy transcript
-
-### Step 4 -- Validate
-
-Before writing output:
-- [ ] Frontmatter is valid YAML
-- [ ] Chapter headers match frontmatter `chapters[]` in title and order
-- [ ] If hard-constraint chapters: all `start`/`end` values match source
-- [ ] No chapter body is empty
-- [ ] Every quote appears verbatim in the source transcript
-- [ ] `tags[]` length between 4 and 8
-- [ ] `seo_title` <= 60 chars, `seo_description` <= 160 chars
-
-### Step 5 -- Write output
-
-Write to `--output` path (default: `<source>.summary.md`).
-
-## Fallback: CLI Summarization
-
-For very large files (>500 segments) or when the agent cannot read the
-entire transcript, fall back to the CLI:
+For transcripts too large for the agent (> ~500 segments):
 
 ```bash
 lai summarize caption input.json -o summary.md
 ```
 
-### LLM Configuration for CLI
-
-The CLI requires an LLM backend:
+Configure an LLM backend once:
 
 ```bash
-# Gemini (recommended -- handles large contexts well)
-lai config set summarization.llm.model_name gemini-2.5-flash
-lai config set GEMINI_API_KEY your-key
+lai config set summarization.llm.model_name gemini-3-flash-preview
+# Gemini key: see /lai-transcribe
 
-# OpenAI-compatible
+# Or OpenAI-compatible:
 lai config set summarization.llm.model_name gpt-4o
-lai config set OPENAI_API_KEY your-key
-
-# Local model (Ollama, vLLM, etc.)
-lai config set summarization.llm.model_name qwen3
-lai config set summarization.llm.api_base_url http://localhost:11434/v1
+lai config set OPENAI_API_KEY <your-key>
 ```
 
-### CLI Options
+CLI options: `summarization.lang=zh`, `summarization.length=short`, `summarization.output_format=json`, `meta=video.meta.md`.
 
-```bash
-# Basic summary
-lai summarize caption input.srt
+## Common Issues
 
-# With metadata for richer context
-lai summarize caption input.json meta=video.meta.md
-
-# Chinese summary
-lai summarize caption input.srt summarization.lang=zh
-
-# Short summary
-lai summarize caption input.srt summarization.length=short
-
-# JSON output
-lai summarize caption input.srt summarization.output_format=json
-
-# Custom output path
-lai summarize caption input.srt output=my_summary.md
-
-# Custom LLM endpoint
-lai summarize caption input.srt \
-    summarization.llm.model_name=qwen3 \
-    summarization.llm.api_base_url=http://localhost:8000/v1
-```
-
-## Error Handling
-
-| Condition | Action |
-|-----------|--------|
-| Source file not found | Fail loud. Check path. |
-| Empty transcript / no segments | Fail. Not a valid caption file. |
-| Transcript too large for agent | Fall back to CLI with `lai summarize caption` |
-| LLM not configured for CLI | Guide user to configure via `lai config set` |
-| meta.md chapters malformed | Warn, fall back to agent-generated chapters |
-| Chapter contains 0 segments | Fail. Chapter timestamp split is broken. |
-| Generated summary fails validation | Fix and retry before writing output |
+| Problem | Fix |
+|---------|-----|
+| Source file not found | Fail loud — check the path |
+| Too large for agent | Fall back to CLI `lai summarize caption` |
+| `meta.md` chapters malformed | Agent generates chapters instead |
+| Validation fails | Fix and retry before writing |
 
 ## Related Skills
 
-| Skill | Use When |
-|-------|----------|
-| `/lai-transcribe` | Need transcript before summarizing |
-| `/lai-align` | Need precise timing before summarizing |
-| `/lai-diarize` | Need speaker labels for richer summaries |
-| `/lai-translate` | Translate the summary to another language |
-| `/lai-youtube` | Process YouTube video end-to-end |
-
-### Common Workflow Chains
-
-```bash
-# Transcribe -> Summarize (agent-driven)
-lai transcribe run podcast.mp3 transcript.json
-# Then /lai-summarize for agent-driven summary
-
-# Full pipeline: Transcribe -> Align -> Diarize -> Summarize
-lai transcribe run video.mp4 transcript.json
-lai alignment align video.mp4 transcript.json aligned.json
-lai diarize run video.mp4 aligned.json diarized.json
-# Then /lai-summarize on diarized.json for speaker-aware summary
-
-# CLI fallback for large files
-lai summarize caption huge_transcript.json \
-    meta=video.meta.md \
-    summarization.length=long
-```
-
-## Non-Goals
-
-- Does NOT transcribe audio -- use `/lai-transcribe`
-- Does NOT translate summaries -- use `/lai-translate` or a general translation skill
-- Does NOT generate video chapters for YouTube upload
-- Does NOT publish summaries to any platform
-- Does NOT handle non-audio/caption content (articles, documents)
+- `/lai-transcribe` — produce the transcript first
+- `/lai-align` — precise timestamps feed chapter boundaries
+- `/lai-diarize` — speaker labels enable speaker-aware summaries
+- `/lai-translate` — translate the summary
