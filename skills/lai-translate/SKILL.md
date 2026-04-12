@@ -1,53 +1,65 @@
 ---
 name: lai-translate
 model: sonnet
-description: Translate captions into another language (or produce bilingual captions) while preserving segment count, timing, and speaker labels. Trigger on "translate captions", "翻译字幕", "翻译成中文/英文", "make bilingual subtitles", or "translate this" when working with caption files. Agent does the translation; falls back to `lai translate run` CLI on demand.
+description: Translate captions into another language (or produce bilingual captions) while preserving segment count, timing, and speaker labels. **Primary path uses this session's LLM directly — no API key, no model config.** Trigger on "translate captions", "翻译字幕", "翻译成中文/英文", "make bilingual subtitles", or "translate this" when working with caption files. CLI `lai translate run` is the secondary path for headless / oversized runs.
 ---
 
 # Caption Translator
 
-Agent-driven translation with a strict 1:1 mapping to the source. Optional self-critique pass for higher quality.
+This skill translates using **the agent's own LLM capability** — the model you are running right now. It does not call out to any external translation service by default. Helper scripts do the mechanical parsing, chunking, and writing so the agent only has to produce translations.
+
+**Primary path** (agent-driven, default): `chunk.py` → agent translates → `merge.py` → `validate.py`.
+**Secondary path**: `lai translate run` (CLI with its own LLM backend) — use only when there is no agent in the loop (batch pipelines, CI) or when a transcript is too large to fit in the agent's context.
 
 ## Invariants
 
-Any violation is a bug.
+Any violation is a bug; `validate.py` enforces them.
 
-- Segment count, order, `start` / `end`, `speaker`, and source `text` — preserved verbatim
-- `translation` field — added, non-empty, target language
-- Non-speech events (`[MUSIC]`, `[APPLAUSE]`, …) — kept as-is
+- Segment count, order, `start` / `end`, `speaker` — preserved verbatim
+- Every output segment has non-empty text
+- Bilingual mode (JSON): source `text` preserved, `translation` non-empty
+- Non-speech events (`[MUSIC]`, `[APPLAUSE]`, …) — keep them as-is inside translations
 
-## Parameters
+## Primary Path (agent-driven)
 
-- `<source>` — caption file (SRT, VTT, JSON, …), required
-- `--to <lang>` — target language ISO code, required (`zh`, `ja`, `ko`, `es`, `fr`, `de`, `pt`, `hi`, `ru`, `ar`, `it`, …)
-- `--bilingual` — keep source text alongside translation
-- `--mode normal|refined` — `refined` adds a self-critique revision pass (default `normal`)
-- `--chunk-size <N>` — segments per translation chunk (default 30)
-- `--output <path>` — default `<source_stem>_<LanguageName>.<ext>`
+### Parameters (agent choices)
 
-## Process
+- `<source>` — caption file (SRT, VTT, JSON, ASS, …) parsed via `lattifai-captions` (30+ formats)
+- target language — ISO code (`zh`, `ja`, `ko`, `es`, `fr`, `de`, …)
+- `--bilingual` — keep source text + attach translation (renderers emit dual lines)
+- `--mode refined` — agent does a self-critique revision pass on accuracy / naturalness / terminology / voice
+- `--chunk-size N` — segments per chunk fed to the agent (default 30)
 
-1. Read source; detect language, register, domain, recurring terminology
-2. Translate in chunks of `--chunk-size`, keeping terminology consistent and speaker voice intact
-3. **Refined mode only**: review on accuracy / naturalness / terminology / voice, revise failures
-4. Write in source format; validate segment count and non-empty translations
+### Workflow
 
-## Bilingual Output
+```bash
+# 1. Split the source into agent-sized chunks (JSON, stripped to essentials)
+python skills/lai-translate/scripts/chunk.py video.srt --chunk-size 30 -o chunks.json
 
-**SRT**:
+# 2. Agent translates each chunk and writes translated.json:
+#    {"target_lang": "zh",
+#     "items": [{"idx": 0, "translation": "..."}, ...]}
 
+# 3. Merge translations back into the source format
+#    replace mode (default) — produces a standalone zh SRT:
+python skills/lai-translate/scripts/merge.py video.srt translated.json
+#    bilingual mode — source + translation lines (SRT/VTT/ASS/JSON):
+python skills/lai-translate/scripts/merge.py video.srt translated.json --bilingual -o video_bilingual.srt
+
+# 4. Validate invariants
+python skills/lai-translate/scripts/validate.py video.srt video_Chinese.srt
 ```
-1
-00:00:01,000 --> 00:00:03,500
-Hello, welcome to the show.
-你好，欢迎来到节目。
-```
 
-- **JSON** — both `text` and `translation` populated
-- **ASS** — dual-line styling (source top, translation bottom). Convert via `/lai-caption`:
-  `laicap-convert out.json out.ass caption.ass.style=bilingual`
+Default output path: `<source_stem>_<LanguageName>.<ext>` next to the source.
 
-## CLI Fallback
+### Agent responsibilities inside step 2
+
+1. Read the source (and ideally a few surrounding chunks) to lock terminology and register
+2. Translate each item, keeping speaker voice distinct and non-speech events intact
+3. **Refined mode**: review each chunk against accuracy / naturalness / terminology / voice; revise failures
+4. Emit `translated.json` with `idx` matching the source — do not add/remove/reorder items
+
+## Secondary Path (CLI, headless)
 
 ```bash
 lai translate run input.srt output.srt \
@@ -55,7 +67,7 @@ lai translate run input.srt output.srt \
     translation.mode=normal
 ```
 
-Configure an LLM backend once:
+Configure an LLM backend once (required for this path only):
 
 ```bash
 lai config set translation.llm.model_name gemini-3-flash-preview
@@ -66,14 +78,23 @@ lai config set translation.llm.model_name gpt-4o
 lai config set OPENAI_API_KEY <your-key>
 ```
 
+## Bilingual Rendering
+
+- **SRT / VTT** — two lines per cue (source on top, translation below)
+- **JSON** — both `text` and `translation` populated, round-trippable
+- **ASS** — convert the JSON output via `/lai-caption` for dual-line styling:
+  `laicap-convert out.json out.ass caption.ass.style=bilingual`
+
 ## Common Issues
 
 | Problem | Fix |
 |---------|-----|
-| Segment count drift | Bug — re-translate the affected chunk |
-| Source-language text leaks into `translation` | Run refined mode |
-| Terminology inconsistent across chunks | Refined mode's self-critique pass |
-| Source language unclear | Ask the user to specify it |
+| `merge.py` reports N missing translations | Re-translate those `idx`es and re-run `merge.py` |
+| `validate.py` flags segment count drift | Bug — re-run `chunk.py` + `merge.py` from a clean state |
+| Terminology inconsistent across chunks | Run in refined mode, or pass earlier chunks as context |
+| Source-language text leaks into translation | Refined mode's self-critique; validate `validate.py` on JSON output |
+| Transcript too large for the agent | Fall back to CLI (secondary path) |
+| Source language unclear | Ask the user to confirm before translating |
 
 ## Related Skills
 

@@ -1,29 +1,47 @@
 ---
 name: lai-summarize
 model: sonnet
-description: Summarize a transcript, podcast, or long caption file into structured markdown (TL;DR, chapters with timestamps, quotes, entities). Trigger on "summarize", "生成摘要", "总结", "TL;DR", "episode summary", "what was discussed", or when the user has a long caption and wants key points. Agent reads the file directly; falls back to `lai summarize caption` CLI for very large files.
+description: Summarize a transcript, podcast, or long caption file into structured markdown (TL;DR, chapters with timestamps, quotes, entities). **Primary path uses this session's LLM directly — no API key, no model config.** Trigger on "summarize", "生成摘要", "总结", "TL;DR", "episode summary", "what was discussed", or when the user has a long caption and wants key points. CLI `lai summarize caption` is the secondary path for oversized transcripts / headless runs.
 ---
 
 # Content Summarizer
 
-Agent-driven summary of transcripts and captions. Output is markdown with YAML frontmatter — chapters, quotes, entities, SEO metadata.
+This skill summarizes using **the agent's own LLM capability** — the model you are running right now. It does not call out to any external LLM service by default. Helper scripts turn the source into an agent-ready prompt and validate the finished summary, so the agent only has to write prose.
+
+**Primary path** (agent-driven, default): `prepare.py` → agent writes summary.md → `validate.py`.
+**Secondary path**: `lai summarize caption` (CLI with its own LLM backend) — only when the transcript is too large for the agent's context, or there is no agent in the loop.
 
 ## Inputs
 
-Accepts JSON (`supervisions[]` from `/lai-align` or `/lai-diarize`), SRT, VTT, ASS, Gemini-style markdown, or plain text.
+Any caption format supported by `lattifai-captions` (SRT, VTT, ASS, JSON, Gemini markdown, plain text, …).
 
-Optional `meta.md` beside the source enriches the summary. **If `meta.md` defines `chapters:`, those titles and timestamps are hard constraints** — no merge, split, or rename.
+Optional `meta.md` beside the source enriches the summary. **If `meta.md` defines `chapters:`, those titles and timestamps are hard constraints** — no merge, split, rename, or reorder.
 
-## Parameters
+## Primary Path (agent-driven)
 
-- `<source>` — caption/transcript file (required)
+### Parameters (agent choices)
+
+- `<source>` — caption/transcript file
 - `--output <path>` — default `<source>.summary.md`
 - `--meta <path>` — episode metadata (auto-detected beside source)
 - `--lang <code>` — summary language (default: source language)
-- `--length short|medium|long` — ≈ 200–400 / 500–1000 / 1000–2000 words (default `medium`)
-- `--format markdown|json` — default `markdown`
+- length — `short` / `medium` / `long` ≈ 200–400 / 500–1000 / 1000–2000 words (default `medium`)
 
-## Output Schema
+### Workflow
+
+```bash
+# 1. Build an agent-ready prompt input from the source + meta.md
+python skills/lai-summarize/scripts/prepare.py episode.srt -o prompt_input.md
+
+# 2. Agent reads prompt_input.md and writes summary.md following the schema below.
+
+# 3. Validate frontmatter, chapters, and verbatim quotes
+python skills/lai-summarize/scripts/validate.py episode.srt summary.md
+```
+
+`prepare.py` produces a transcript with `[MM:SS]` timestamps and speaker labels, plus a `# Meta` block that marks `meta.md` chapters as **HARD CONSTRAINT** when present.
+
+### Output Schema
 
 ```markdown
 ---
@@ -49,24 +67,26 @@ Summary paragraph(s).
 - **Name** (Person|Concept|Organization): one-line context
 ```
 
-## Validation Before Writing
+### What `validate.py` checks
 
-- Frontmatter is valid YAML
-- Chapter headers match `chapters[]` in order
-- Hard-constraint `start` / `end` unchanged
-- No empty chapter bodies
-- Every quote appears verbatim in the source
-- `tags[]` has 4–8 items; SEO fields within limits
+- Frontmatter is valid YAML with all required fields
+- `seo_title` ≤ 60, `seo_description` ≤ 160
+- `tags`: 4–8 entries
+- `chapters`: 1–8, each with title/start/end, start < end
+- Hard constraint: chapter titles + timestamps match `meta.md` verbatim when present
+- Body `## [MM:SS] Title` headers match frontmatter chapters 1:1 in order
+- Every `> *"quote"*` appears verbatim in source transcript text
+- `confidence` ∈ [0, 1]; `source_quality` ∈ {high, medium, low}
 
-## CLI Fallback (large files)
+Requires `pyyaml` (stdlib `argparse` / `re` otherwise).
 
-For transcripts too large for the agent (> ~500 segments):
+## Secondary Path (CLI)
 
 ```bash
 lai summarize caption input.json -o summary.md
 ```
 
-Configure an LLM backend once:
+Configure an LLM backend once (required for this path only):
 
 ```bash
 lai config set summarization.llm.model_name gemini-3-flash-preview
@@ -83,10 +103,10 @@ CLI options: `summarization.lang=zh`, `summarization.length=short`, `summarizati
 
 | Problem | Fix |
 |---------|-----|
-| Source file not found | Fail loud — check the path |
-| Too large for agent | Fall back to CLI `lai summarize caption` |
-| `meta.md` chapters malformed | Agent generates chapters instead |
-| Validation fails | Fix and retry before writing |
+| `validate.py` flags quote not in source | Quote must be verbatim — rewrite or pick another line |
+| Chapter count / timestamp drift from meta.md | Hard constraint — use meta.md values exactly |
+| Transcript too large for the agent | Fall back to CLI (secondary path) |
+| `meta.md` chapters malformed | Remove from meta.md and let the agent generate chapters |
 
 ## Related Skills
 
