@@ -1,6 +1,6 @@
 ---
 name: lai-diarize
-description: Use when user needs speaker identification in audio/captions. Detects who speaks when, assigns speaker labels, and optionally infers speaker names from context. Triggers on "diarize", "speaker detection", "说话人识别", "who is speaking", "add speaker labels", or multi-speaker content processing.
+description: Use when user needs speaker identification in audio/captions. Detects who speaks when, assigns speaker labels, and optionally infers speaker names from context. Use this skill whenever the user has a podcast, interview, meeting recording, or any multi-speaker audio and wants to know who said what. Also triggers on "diarize", "speaker detection", "说话人识别", "who is speaking", "add speaker labels", "区分说话人", "identify speakers", "which speaker said this", even if they just say "this podcast has two people, I need their names labeled".
 allowed-tools: Read, Bash(lai:*)
 ---
 
@@ -8,6 +8,10 @@ allowed-tools: Read, Bash(lai:*)
 
 Identify and label speakers in aligned captions. Uses pyannote.audio for
 speaker detection and optional LLM-powered speaker name inference.
+
+**CLI syntax note**: LattifAI uses `nemo_run` configuration syntax. Options use
+`key=value` format (e.g., `diarization.infer_speakers=true`), NOT traditional
+flags. This applies to all `lai` subcommands.
 
 **Requires**: Aligned captions as input (run `/lai-align` first).
 

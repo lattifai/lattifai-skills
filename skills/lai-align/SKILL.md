@@ -1,6 +1,6 @@
 ---
 name: lai-align
-description: Use when user needs accurate/precise caption timing, or aligning captions with audio/video using forced alignment. Corrects caption timing to match actual speech. Uses LattifAI Lattice-1 model. Triggers on "align captions", "fix timing", "forced alignment", "对齐字幕", "校准时间轴", or when user has both audio and text that need synchronization.
+description: Use when user needs accurate/precise caption timing, or aligning captions with audio/video using forced alignment. Corrects caption timing to match actual speech. Uses LattifAI Lattice-1 model. Use this skill whenever the user mentions subtitle timing, caption sync, audio-text alignment, word-level timestamps, karaoke timing, or has both an audio file and a text file that need to be synchronized. Also triggers on "align captions", "fix timing", "forced alignment", "对齐字幕", "校准时间轴", "时间轴不准", "字幕同步", "timestamps are off", "captions are out of sync", even if they don't use the word "alignment" explicitly.
 allowed-tools: Read, Bash(lai:*)
 ---
 
@@ -10,6 +10,10 @@ Precision audio-text forced alignment powered by the Lattice-1 model. Produces
 word-level and segment-level timestamps with sub-frame accuracy.
 
 **Requires LattifAI API Key** -- get one free via `lai auth trial` (see `/lai-setup`).
+
+**CLI syntax note**: LattifAI uses `nemo_run` configuration syntax. Options use
+`key=value` format (e.g., `media.streaming_chunk_secs=300`), NOT traditional
+flags (`--streaming-chunk-secs`). This applies to all `lai` subcommands.
 
 ## When to Use
 

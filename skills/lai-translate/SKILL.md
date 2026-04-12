@@ -1,7 +1,7 @@
 ---
 name: lai-translate
 model: sonnet
-description: Use when translating captions/subtitles to another language. Agent-driven translation using the agent's own language ability for highest quality. Supports bilingual output. Triggers on "translate captions", "翻译字幕", "translate to Chinese", "翻译成英文", or when user has captions in one language and needs another.
+description: Use when translating captions/subtitles to another language. Agent-driven translation using the agent's own language ability for highest quality. Supports bilingual output. Use this skill whenever the user has captions or subtitles in one language and needs them in another, wants bilingual subtitles, or mentions translating any SRT/VTT/ASS/JSON caption file. Also triggers on "translate captions", "翻译字幕", "translate to Chinese", "翻译成英文", "翻译成中文", "make bilingual subtitles", "I need Chinese subtitles", "把这个字幕翻译一下", even if they just say "translate this" while working with caption files.
 ---
 
 # Caption Translator

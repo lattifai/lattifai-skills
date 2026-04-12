@@ -1,7 +1,7 @@
 ---
 name: lai-summarize
 model: sonnet
-description: Use when generating a summary from captions, transcripts, or audio content. Agent-driven summarization using the agent's own LLM ability for highest quality. Falls back to CLI when needed. Triggers on "summarize", "生成摘要", "总结内容", "write summary", "episode summary", or when user wants a condensed version of caption/transcript content.
+description: Use when generating a summary from captions, transcripts, or audio content. Agent-driven summarization using the agent's own LLM ability for highest quality. Falls back to CLI when needed. Use this skill whenever the user has a transcript, podcast, interview, or long caption file and wants a condensed overview, chapter summary, or key takeaways. Also triggers on "summarize", "生成摘要", "总结内容", "write summary", "episode summary", "总结这个播客", "what was discussed", "give me the highlights", "TL;DR", even if they just say "this transcript is really long, what are the main points?".
 ---
 
 # Content Summarizer

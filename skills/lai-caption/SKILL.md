@@ -1,6 +1,6 @@
 ---
 name: lai-caption
-description: Use when converting between caption/subtitle formats or adjusting timing. Supports 30+ formats including SRT, VTT, ASS, TTML, JSON, TextGrid, LRC, and NLE formats (Premiere, FCPXML). Triggers on "convert captions", "转换字幕格式", "change format", "shift timing", "SRT to VTT", "ASS styling", or any format conversion request.
+description: Use when converting between caption/subtitle formats or adjusting timing. Supports 30+ formats including SRT, VTT, ASS, TTML, JSON, TextGrid, LRC, and NLE formats (Premiere, FCPXML). Use this skill whenever the user needs to change subtitle format, shift caption timing, add ASS styling, create karaoke effects, or export captions for video editing software. Also triggers on "convert captions", "转换字幕格式", "change format", "shift timing", "SRT to VTT", "ASS styling", "转换成SRT", "make ASS subtitles", "karaoke effect", "导入Premiere", even if they just say "I have an SRT and need a VTT" or "shift all timestamps by 2 seconds".
 allowed-tools: Read, Bash(laicap:*), Bash(lai:*)
 ---
 
@@ -9,6 +9,10 @@ allowed-tools: Read, Bash(laicap:*), Bash(lai:*)
 Convert between 30+ caption/subtitle formats with optional timing adjustment
 and ASS styling. Preserves text content, timing, speaker labels, and
 word-level alignment data where the target format supports it.
+
+**CLI syntax note**: LattifAI uses `nemo_run` configuration syntax. Options use
+`key=value` format (e.g., `caption.ass.font_size=48`), NOT traditional flags.
+This applies to all `lai` subcommands.
 
 ## When to Use
 

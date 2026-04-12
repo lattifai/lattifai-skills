@@ -1,6 +1,7 @@
 ---
 name: lai-setup
-description: Use when the user needs to install LattifAI, authenticate, get a trial key, run diagnostics, or configure the CLI. Triggers on "install lattifai", "setup lai", "get API key", "lai auth", "lai doctor", "配置 LattifAI", or first-time LattifAI usage.
+description: Use when the user needs to install LattifAI, authenticate, get a trial key, run diagnostics, or configure the CLI. Use this skill whenever the user mentions LattifAI for the first time, asks about API keys, wants to set up audio-text alignment tools, mentions "lai" CLI, asks about trial access, or encounters authentication errors. Also triggers on "install lattifai", "setup lai", "get API key", "lai auth", "lai doctor", "配置 LattifAI", "安装", "认证", "试用", even if they just say "how do I get started with alignment" or "I need to align some captions" without having LattifAI installed yet.
+allowed-tools: Read, Bash(lai:*), Bash(pip:*)
 ---
 
 # LattifAI Setup

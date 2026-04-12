@@ -1,12 +1,16 @@
 ---
 name: lai-transcribe
-description: Use when transcribing audio/video to text with timestamps. Supports YouTube URLs, local files, multiple ASR models (Gemini, Parakeet, SenseVoice). Triggers on "transcribe", "转录", "语音转文字", "generate transcript", "ASR", or when user has audio/video but no text.
+description: Use when transcribing audio/video to text with timestamps. Supports YouTube URLs, local files, multiple ASR models (Gemini, Parakeet, SenseVoice). Use this skill whenever the user has audio or video and needs text output, mentions speech-to-text, wants captions generated from scratch, or asks to "get the text from this video/audio". Also triggers on "transcribe", "转录", "语音转文字", "generate transcript", "ASR", "speech to text", "听写", "我有个音频需要出文字", even if they just provide an audio file path and say "I need captions for this".
 allowed-tools: Read, Bash(lai:*)
 ---
 
 # LattifAI Transcription
 
 Multi-model automatic speech recognition (ASR) producing timestamped transcripts.
+
+**CLI syntax note**: LattifAI uses `nemo_run` configuration syntax. Options use
+`key=value` format (e.g., `transcription.model_name=gemini-2.5-pro`), NOT
+traditional flags. This applies to all `lai` subcommands.
 
 ## When to Use
 

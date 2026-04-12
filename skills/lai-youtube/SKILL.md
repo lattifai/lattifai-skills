@@ -1,6 +1,6 @@
 ---
 name: lai-youtube
-description: Use when processing YouTube videos -- downloads media and aligns captions in one step. Handles YouTube URL input, optional transcription, and caption download. Triggers on "YouTube", "youtube url", "处理YouTube视频", "align youtube", or when user provides a YouTube URL for caption work.
+description: Use when processing YouTube videos -- downloads media and aligns captions in one step. Handles YouTube URL input, optional transcription, and caption download. Use this skill whenever the user provides a YouTube URL and wants captions, subtitles, or transcripts from it, or mentions downloading and aligning YouTube content. Also triggers on "YouTube", "youtube url", "处理YouTube视频", "align youtube", "get captions from youtube", "下载YouTube字幕", "youtube subtitles", even if they just paste a youtube.com or youtu.be URL and say "I need subtitles for this".
 allowed-tools: Read, Bash(lai:*), Bash(yt-dlp:*)
 ---
 
@@ -10,6 +10,10 @@ One-command pipeline: YouTube URL to precisely aligned captions. Downloads
 media, fetches or generates captions, and runs forced alignment.
 
 **Requires LattifAI API Key** -- get one free via `lai auth trial`.
+
+**CLI syntax note**: LattifAI uses `nemo_run` configuration syntax. Options use
+`key=value` format (e.g., `caption.input.split_sentence=true`), NOT traditional
+flags. This applies to all `lai` subcommands.
 
 ## When to Use
 
