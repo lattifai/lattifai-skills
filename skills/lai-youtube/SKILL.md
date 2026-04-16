@@ -82,10 +82,11 @@ lai youtube align -Y "https://youtu.be/VIDEO_ID" \
 
 # Step 2 — JSON → ASS with per-word karaoke highlighting (see /lai-caption)
 laicap-convert -Y ./aligned.json ./aligned.karaoke.ass \
-    render.word_level=true \
     ass.karaoke_effect=sweep \
     ass.karaoke_color_scheme=azure-gold
 ```
+
+(`render.word_level` is not needed on the convert side — it's default word-scope. The upstream `caption.render.word_level=true` in Step 1 is what populates the `words` arrays that karaoke reads.)
 
 For bilingual karaoke, run `/lai-translate` on `aligned.json` first (it preserves `words`), then run step 2 on the bilingual JSON.
 

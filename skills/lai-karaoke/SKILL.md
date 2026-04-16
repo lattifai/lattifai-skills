@@ -87,9 +87,10 @@ Map preset → ASS config, then call `laicap-convert`:
 
 ```bash
 # Example: preset=tiktok, probe={font_size:86, play_res_x:1080, play_res_y:1920}
+# render.word_level is default word-scope — karaoke_effect alone triggers per-word \k.
+# Only pass render.word_level=false when you want line-scope (single override per line).
 laicap-convert --direct -Y \
     aligned.json output.karaoke.ass \
-    render.word_level=true \
     render.include_speaker_in_text=true \
     ass.karaoke_effect=sweep \
     ass.karaoke_color_scheme=sunset-warm \
@@ -101,16 +102,18 @@ laicap-convert --direct -Y \
     standardization.end_margin=0.15
 ```
 
+Input JSON must carry `words` arrays (upstream `/lai-align` or `/lai-youtube` with `caption.render.word_level=true`); without that the effect falls back silently to line-scope.
+
 Speaker-aware variant (when input is `diarized.json`):
 
 ```bash
     ass.speaker_color="#658AE4,#FFC209,#F7C3D9,#CC5D84"   # per-speaker palette
 ```
 
-Bilingual variant (when input has `translation` populated — see `/lai-translate`):
+Bilingual variant (input has `translation` populated — see **`/lai-translate` §Bilingual Delivery Guide** for format selection, typography rules, and dual-track vs dual-line trade-offs):
 
 ```bash
-    ass.translation_color="#00FFFF"
+    ass.translation_color="#00FFFF"   # accent on the translation line
 ```
 
 ### Step 5 — Cross-promote (funnel)
