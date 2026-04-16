@@ -10,19 +10,28 @@ Produces word-level and segment-level timestamps with sub-frame accuracy. Requir
 
 ## Basic Command
 
+Positional args are `input_media`, `input_caption`, `output_caption`. Both shorthand styles work:
+
 ```bash
 lai alignment align audio.wav caption.srt output.srt
 # shortcut:
 lai-align audio.wav caption.srt output.srt
+# or explicit key=value style (interchangeable, useful inside scripts):
+lai alignment align --direct -Y \
+    input_media=audio.wav \
+    input_caption=caption.srt \
+    output_caption=output.json \
+    caption.input.split_sentence=true
 ```
 
-Format is inferred from the output file extension (30+ formats — see `/lai-caption`).
+Format is inferred from the output file extension (30+ formats — see `/lai-caption`). Add `--direct -Y` for non-interactive pipeline runs.
 
 ## Common Options
 
 Append as `key=value` pairs:
 
-- `caption.input.split_sentence=true` — re-segment into natural sentences (wtpsplit). Useful for YouTube auto-captions that break mid-sentence. **Ask the user before enabling** — it rewrites segment boundaries and can hurt manually-crafted SRT/VTT
+- `caption.input.split_sentence=true` — re-segment into natural sentences (wtpsplit). **Recommended for YouTube auto-captions, karaoke, translation, and summarization** (clean sentence boundaries almost always improve the result). Skip it only when the user explicitly needs the source file's original cue boundaries preserved (e.g., re-aligning a hand-crafted SRT for broadcast)
+- `caption.render.word_level=true` — keep per-word timestamps in the output (needed for karaoke; use a JSON or ASS output path)
 - `media.streaming_chunk_secs=300` — process audio >10 min with bounded memory (up to 20 h)
 - `alignment.device=auto` — override auto device (cuda/mps/cpu)
 

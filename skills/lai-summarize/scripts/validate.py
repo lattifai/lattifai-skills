@@ -96,23 +96,43 @@ def check_chapters(fm: dict, body: str, errors: list[str]) -> None:
 def check_meta_hard_constraint(fm: dict, source: Path, errors: list[str]) -> None:
     # meta.md is authoritative when present; chapter titles+timestamps must match verbatim.
     for candidate in (source.with_suffix(".meta.md"), source.parent / "meta.md"):
-        if candidate.is_file():
-            meta = yaml.safe_load(candidate.read_text(encoding="utf-8").split("---", 2)[1]) if "---" in candidate.read_text(encoding="utf-8") else None
-            if not isinstance(meta, dict):
-                return
-            meta_chapters = meta.get("chapters") or []
-            fm_chapters = fm.get("chapters") or []
-            if len(meta_chapters) != len(fm_chapters):
-                errors.append(f"chapter count drifts from meta.md ({len(fm_chapters)} vs {len(meta_chapters)})")
-                return
-            for i, (m, f) in enumerate(zip(meta_chapters, fm_chapters)):
-                if m.get("title") != f.get("title"):
-                    errors.append(f"chapter[{i}] title drift from meta.md: {f.get('title')!r} vs {m.get('title')!r}")
-                if abs(float(m.get("start", 0)) - float(f.get("start", 0))) > 1e-3:
-                    errors.append(f"chapter[{i}] start drift from meta.md")
-                if abs(float(m.get("end", 0)) - float(f.get("end", 0))) > 1e-3:
-                    errors.append(f"chapter[{i}] end drift from meta.md")
+        if not candidate.is_file():
+            continue
+        raw = candidate.read_text(encoding="utf-8")
+        if "---" not in raw:
+            # Silently skipping is the old bug — warn loudly so the user
+            # doesn't assume hard-constraint checks ran.
+            print(
+                f"warning: {candidate} has no YAML frontmatter (needs `---` delimiters); "
+                "hard-constraint checks skipped.",
+                file=sys.stderr,
+            )
             return
+        try:
+            meta = yaml.safe_load(raw.split("---", 2)[1])
+        except yaml.YAMLError as e:
+            errors.append(f"meta.md frontmatter is not valid YAML: {e}")
+            return
+        if not isinstance(meta, dict):
+            print(f"warning: {candidate} frontmatter is not a mapping; hard-constraint checks skipped.", file=sys.stderr)
+            return
+        if "chapters" not in meta:
+            # meta.md present but no `chapters:` key → user did not declare
+            # a hard constraint; let the agent's chapters stand.
+            return
+        meta_chapters = meta.get("chapters") or []
+        fm_chapters = fm.get("chapters") or []
+        if len(meta_chapters) != len(fm_chapters):
+            errors.append(f"chapter count drifts from meta.md ({len(fm_chapters)} vs {len(meta_chapters)})")
+            return
+        for i, (m, f) in enumerate(zip(meta_chapters, fm_chapters)):
+            if m.get("title") != f.get("title"):
+                errors.append(f"chapter[{i}] title drift from meta.md: {f.get('title')!r} vs {m.get('title')!r}")
+            if abs(float(m.get("start", 0)) - float(f.get("start", 0))) > 1e-3:
+                errors.append(f"chapter[{i}] start drift from meta.md")
+            if abs(float(m.get("end", 0)) - float(f.get("end", 0))) > 1e-3:
+                errors.append(f"chapter[{i}] end drift from meta.md")
+        return
 
 
 def check_quotes_verbatim(body: str, source_text: str, errors: list[str]) -> None:

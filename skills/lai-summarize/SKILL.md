@@ -1,10 +1,11 @@
 ---
 name: lai-summarize
-model: sonnet
 description: Summarize a transcript, podcast, or long caption file into structured markdown (TL;DR, chapters with timestamps, quotes, entities). **Primary path uses this session's LLM directly — no API key, no model config.** Trigger on "summarize", "生成摘要", "总结", "TL;DR", "episode summary", "what was discussed", or when the user has a long caption and wants key points. CLI `lai summarize caption` is the secondary path for oversized transcripts / headless runs.
 ---
 
 # Content Summarizer
+
+> **Preferred model: Claude Sonnet** (cost-efficient for this agent-driven workload). This skill runs on whatever model is active in the parent session — any Claude model works; no hard switch.
 
 This skill summarizes using **the agent's own LLM capability** — the model you are running right now. It does not call out to any external LLM service by default. Helper scripts turn the source into an agent-ready prompt and validate the finished summary, so the agent only has to write prose.
 
@@ -16,6 +17,19 @@ This skill summarizes using **the agent's own LLM capability** — the model you
 Any caption format supported by `lattifai-captions` (SRT, VTT, ASS, JSON, Gemini markdown, plain text, …).
 
 Optional `meta.md` beside the source enriches the summary. **If `meta.md` defines `chapters:`, those titles and timestamps are hard constraints** — no merge, split, rename, or reorder.
+
+`meta.md` **must** wrap its YAML in `---` frontmatter delimiters; otherwise `validate.py` can't parse it and hard constraints are silently skipped (with a warning on stderr). Minimal template:
+
+```markdown
+---
+title: "Episode Title"
+chapters:
+  - { title: "Intro", start: 0.0, end: 60.0 }
+  - { title: "Main Topic", start: 60.0, end: 420.0 }
+---
+
+Free-form notes below the frontmatter are fine.
+```
 
 ## Primary Path (agent-driven)
 
@@ -82,8 +96,10 @@ Requires `pyyaml` (stdlib `argparse` / `re` otherwise).
 
 ## Secondary Path (CLI)
 
+The CLI takes two positional args (`input`, `output`); there is no `-o`:
+
 ```bash
-lai summarize caption input.json -o summary.md
+lai summarize caption input.json summary.md
 ```
 
 Configure an LLM backend once (required for this path only):

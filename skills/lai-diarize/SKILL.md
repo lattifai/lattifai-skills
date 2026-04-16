@@ -1,10 +1,11 @@
 ---
 name: lai-diarize
-model: sonnet
 description: Identify speakers ("who said what") in aligned captions via pyannote.audio. Real speaker names come from the agent's own reasoning over transcript + context (default), with a CLI-LLM fallback for headless runs. Trigger on multi-speaker content (podcasts, interviews, meetings) or phrases like "diarize", "speaker detection", "说话人识别", "区分说话人", "label the speakers". Requires aligned captions — run `/lai-align` first.
 ---
 
 # Speaker Diarization
+
+> **Preferred model: Claude Sonnet** (cost-efficient for agent-driven naming). This skill runs on whatever model is active in the parent session — any Claude model works; no hard switch. Sonnet has no 1M-context variant, so if the parent session is Opus[1M], continuing on Opus is normal (avoids a no-op model swap).
 
 Adds `speaker` labels to aligned captions. Speaker **detection** (who speaks when) is always CLI-based via pyannote.audio; speaker **naming** (who each one is) is agent-driven by default.
 
@@ -64,15 +65,21 @@ When the agent is not in the loop (batch pipelines, CI, unattended scripts), let
 ```bash
 lai config set diarization.llm.model_name gemini-3-flash-preview    # one-time
 # Gemini key: see /lai-transcribe
-lai diarize run podcast.mp3 aligned.json diarized.json diarization.infer_speakers=true
+lai diarize run --direct -Y \
+    podcast.mp3 aligned.json diarized.json \
+    diarization.infer_speakers=true \
+    diarization.llm.reasoning=true
 ```
+
+- `diarization.infer_speakers=true` — enable CLI-side name inference (requires LLM config above)
+- `diarization.llm.reasoning=true` — ask the LLM to show its reasoning before committing to a name; trades latency for accuracy on ambiguous speakers
 
 You can also pass hints at invocation time without any LLM:
 
 ```bash
 lai diarize run podcast.mp3 aligned.json diarized.json \
     context="Host: Alice Chen (tech journalist), Guest: Bob Smith (AI researcher)"
-# or:
+# or point at a meta.md (first positional `context` arg also accepts a file path):
 lai diarize run podcast.mp3 aligned.json diarized.json context=episode.meta.md
 ```
 

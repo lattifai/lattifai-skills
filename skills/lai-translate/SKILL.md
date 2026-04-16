@@ -1,10 +1,11 @@
 ---
 name: lai-translate
-model: sonnet
 description: Translate captions into another language (or produce bilingual captions) while preserving segment count, timing, and speaker labels. **Primary path uses this session's LLM directly — no API key, no model config.** Trigger on "translate captions", "翻译字幕", "翻译成中文/英文", "make bilingual subtitles", or "translate this" when working with caption files. CLI `lai translate run` is the secondary path for headless / oversized runs.
 ---
 
 # Caption Translator
+
+> **Preferred model: Claude Sonnet** (cost-efficient for this agent-driven workload). This skill runs on whatever model is active in the parent session — any Claude model works; no hard switch. If you're deliberately on Opus / Haiku, that's fine.
 
 This skill translates using **the agent's own LLM capability** — the model you are running right now. It does not call out to any external translation service by default. Helper scripts do the mechanical parsing, chunking, and writing so the agent only has to produce translations.
 
@@ -61,8 +62,10 @@ Default output path: `<source_stem>_<LanguageName>.<ext>` next to the source.
 
 ## Secondary Path (CLI, headless)
 
+The CLI subcommand is `lai translate caption` (not `lai translate run`); `input` / `output` are positional:
+
 ```bash
-lai translate run input.srt output.srt \
+lai translate caption input.srt output.srt \
     translation.target_lang=zh \
     translation.mode=normal
 ```
@@ -81,9 +84,17 @@ lai config set OPENAI_API_KEY <your-key>
 ## Bilingual Rendering
 
 - **SRT / VTT** — two lines per cue (source on top, translation below)
-- **JSON** — both `text` and `translation` populated, round-trippable
-- **ASS** — convert the JSON output via `/lai-caption` for dual-line styling:
-  `laicap-convert out.json out.ass caption.ass.style=bilingual`
+- **JSON** — both `text` and `translation` populated, round-trippable, and `words` arrays (if present in the source) are **preserved**. This is what makes bilingual karaoke possible.
+- **ASS** — convert the bilingual JSON via `/lai-caption` (flat `ass.*` keys, not `caption.ass.*`):
+
+  ```bash
+  # Bilingual + per-word karaoke on the source language
+  laicap-convert aligned_bilingual.json out.ass \
+      render.word_level=true \
+      ass.karaoke_effect=sweep \
+      ass.karaoke_color_scheme=azure-gold \
+      ass.translation_color="#00FFFF"
+  ```
 
 ## Common Issues
 
