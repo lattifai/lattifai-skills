@@ -1,0 +1,34 @@
+{
+  "name": "lattifai-skills",
+  "owner": {
+    "name": "LattifAI",
+    "email": "support@lattifai.com"
+  },
+  "metadata": {
+    "description": "Audio-text alignment, transcription, translation, karaoke, and subtitle toolkit powered by LattifAI Lattice-1.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "lattifai-skills",
+      "source": "./",
+      "description": "9 skills covering the full audio-to-multilingual-caption pipeline: setup, YouTube ingest, transcription, forced alignment, diarization, translation, summarization, format conversion, and viral-ready karaoke.",
+      "homepage": "https://lattifai.com",
+      "repository": "https://github.com/lattifai/lattifai-skills",
+      "license": "MIT",
+      "category": "media",
+      "keywords": [
+        "audio",
+        "subtitle",
+        "karaoke",
+        "alignment",
+        "transcription",
+        "translation",
+        "diarization",
+        "bilingual",
+        "youtube",
+        "lyric-video"
+      ]
+    }
+  ]
+}
