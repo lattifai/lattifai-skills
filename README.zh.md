@@ -74,13 +74,20 @@ cp -r lattifai-skills/skills/lai-karaoke .claude/skills/
 
 ## 依赖要求
 
-不同 skill 依赖不同，按需安装：
+不同 skill 依赖不同，按需安装。
+
+> **重要：**`lattifai` 包依赖 `lattifai-core`，后者只发布在 LattifAI 自建 PyPI 镜像。**安装时必须带上** `--extra-index-url https://lattifai.github.io/pypi/simple/`。
+
+```bash
+# 推荐：完整安装（对齐 + 转录 + 字幕转换）
+pip install "lattifai[all]" --extra-index-url https://lattifai.github.io/pypi/simple/
+```
 
 | Skill 组 | 必需 | 可选 |
 |----------|------|------|
-| 对齐 / YouTube / 说话人分离 | Python 3.10+、`pip install lattifai`、[LattifAI API key](https://lattifai.com)（`lai auth trial` 免费试用） | `yt-dlp`、`ffprobe` / `ffmpeg` |
-| 转录 | `pip install lattifai[transcription]` | Gemini API key（`GEMINI_API_KEY`）、Parakeet / SenseVoice 模型 |
-| 字幕转换 | `pip install lattifai[captions]`（或完整 `lattifai[all]`） | — |
+| 对齐 / YouTube / 说话人分离 | Python 3.10+、`pip install lattifai --extra-index-url https://lattifai.github.io/pypi/simple/`、[LattifAI API key](https://lattifai.com)（`lai auth trial` 免费试用） | `yt-dlp`、`ffprobe` / `ffmpeg` |
+| 转录 | `pip install "lattifai[transcription]" --extra-index-url https://lattifai.github.io/pypi/simple/` | Gemini API key（`GEMINI_API_KEY`）、Parakeet / SenseVoice 模型 |
+| 字幕转换 | `pip install "lattifai[captions]" --extra-index-url https://lattifai.github.io/pypi/simple/`（或完整 `lattifai[all]`） | — |
 | 卡拉OK | `ffprobe`（用于自适应字号探测）；没有时回落到平台默认分辨率 | — |
 | 翻译 / 摘要 | 无外部依赖 —— 这两个 skill 直接使用 Claude Code 会话的 LLM | — |
 

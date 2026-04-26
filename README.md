@@ -74,13 +74,20 @@ They will be invocable as `/lai-karaoke` (no namespace prefix) and scoped to the
 
 ## Requirements
 
-Different skills have different dependencies — install what you need:
+Different skills have different dependencies — install what you need.
+
+> **Important:** the `lattifai` package depends on `lattifai-core`, which is hosted on the LattifAI PyPI mirror. Always include `--extra-index-url https://lattifai.github.io/pypi/simple/` when installing.
+
+```bash
+# Recommended: full install (alignment + transcription + captions)
+pip install "lattifai[all]" --extra-index-url https://lattifai.github.io/pypi/simple/
+```
 
 | Skill group | Required | Optional |
 |-------------|----------|----------|
-| Alignment / YouTube / Diarization | Python 3.10+, `pip install lattifai`, [LattifAI API key](https://lattifai.com) (`lai auth trial` for a free one) | `yt-dlp`, `ffprobe` / `ffmpeg` |
-| Transcription | `pip install lattifai[transcription]` | Gemini API key (`GEMINI_API_KEY`), Parakeet / SenseVoice models |
-| Caption conversion | `pip install lattifai[captions]` (or full `lattifai[all]`) | — |
+| Alignment / YouTube / Diarization | Python 3.10+, `pip install lattifai --extra-index-url https://lattifai.github.io/pypi/simple/`, [LattifAI API key](https://lattifai.com) (`lai auth trial` for a free one) | `yt-dlp`, `ffprobe` / `ffmpeg` |
+| Transcription | `pip install "lattifai[transcription]" --extra-index-url https://lattifai.github.io/pypi/simple/` | Gemini API key (`GEMINI_API_KEY`), Parakeet / SenseVoice models |
+| Caption conversion | `pip install "lattifai[captions]" --extra-index-url https://lattifai.github.io/pypi/simple/` (or full `lattifai[all]`) | — |
 | Karaoke | `ffprobe` (for adaptive font sizing); the skill falls back to platform defaults without it | — |
 | Translation / Summarization | No external dependencies — these skills run on Claude Code's own LLM | — |
 

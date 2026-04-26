@@ -1,7 +1,7 @@
 {
   "name": "lattifai-skills",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Claude Code plugin + marketplace: audio-text alignment, transcription, translation, karaoke, and subtitle toolkit powered by LattifAI Lattice-1.",
   "repository": {
     "type": "git",

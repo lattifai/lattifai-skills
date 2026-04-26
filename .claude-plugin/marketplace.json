@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Audio-text alignment, transcription, translation, karaoke, and subtitle toolkit powered by LattifAI Lattice-1.",
-    "version": "1.0.0"
+    "version": "0.1.0"
   },
   "plugins": [
     {

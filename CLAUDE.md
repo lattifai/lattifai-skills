@@ -18,7 +18,7 @@ Claude Code skills for the LattifAI audio-text alignment platform.
 ## Prerequisites
 
 - Python 3.10+
-- `pip install lattifai` (or `lattifai[all]` for full features)
+- `pip install lattifai --extra-index-url https://lattifai.github.io/pypi/simple/` (or `"lattifai[all]"` for full features)
 - LattifAI API key (alignment) -- free trial via `lai auth trial`
 - Gemini API key (transcription) -- optional, from https://aistudio.google.com/apikey
 
