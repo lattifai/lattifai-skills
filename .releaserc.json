@@ -1,0 +1,56 @@
+{
+  "branches": ["main"],
+  "plugins": [
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        "preset": "conventionalcommits"
+      }
+    ],
+    [
+      "@semantic-release/release-notes-generator",
+      {
+        "preset": "conventionalcommits",
+        "presetConfig": {
+          "types": [
+            { "type": "feat",     "section": "Features" },
+            { "type": "fix",      "section": "Bug Fixes" },
+            { "type": "perf",     "section": "Performance" },
+            { "type": "refactor", "section": "Refactors" },
+            { "type": "docs",     "section": "Documentation" },
+            { "type": "style",    "hidden": true },
+            { "type": "test",     "hidden": true },
+            { "type": "build",    "hidden": true },
+            { "type": "ci",       "hidden": true },
+            { "type": "chore",    "hidden": true }
+          ]
+        }
+      }
+    ],
+    [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "node -e \"const fs=require('fs'),f='.claude-plugin/plugin.json',j=JSON.parse(fs.readFileSync(f));j.version='${nextRelease.version}';fs.writeFileSync(f,JSON.stringify(j,null,2)+'\\n')\" && node -e \"const fs=require('fs'),f='.claude-plugin/marketplace.json',j=JSON.parse(fs.readFileSync(f));j.metadata=j.metadata||{};j.metadata.version='${nextRelease.version}';fs.writeFileSync(f,JSON.stringify(j,null,2)+'\\n')\""
+      }
+    ],
+    [
+      "@semantic-release/changelog",
+      {
+        "changelogFile": "CHANGELOG.md"
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": [
+          "CHANGELOG.md",
+          "package.json",
+          ".claude-plugin/plugin.json",
+          ".claude-plugin/marketplace.json"
+        ],
+        "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+      }
+    ],
+    "@semantic-release/github"
+  ]
+}

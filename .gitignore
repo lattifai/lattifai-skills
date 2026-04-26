@@ -1,2 +1,7 @@
 lai-skills-workspace/
 evals/
+
+# Node / semantic-release
+node_modules/
+package-lock.json
+.npmrc
