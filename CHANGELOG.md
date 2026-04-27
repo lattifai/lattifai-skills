@@ -1,3 +1,10 @@
+## [0.1.2](https://github.com/lattifai/lattifai-skills/compare/v0.1.1...v0.1.2) (2026-04-27)
+
+### Bug Fixes
+
+* **setup,readme:** document uv install path (~15× faster) with workaround ([849e193](https://github.com/lattifai/lattifai-skills/commit/849e19332fd4ae10cbbc528faccd277dc624c06e))
+* **setup:** document install duration, doctor warnings, multi-env API key ([f4b2b4c](https://github.com/lattifai/lattifai-skills/commit/f4b2b4c74051447eaf46a057153e1e2bd7bd743a))
+
 ## [0.1.1](https://github.com/lattifai/lattifai-skills/compare/v0.1.0...v0.1.1) (2026-04-27)
 
 ### Bug Fixes
