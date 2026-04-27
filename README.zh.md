@@ -1,17 +1,14 @@
 # lattifai-skills
 
-> 面向**支持 Agent 能力的代码 LLM** 的音频-文本对齐、转录、翻译、卡拉OK 与字幕工具箱 —— 由 [LattifAI](https://lattifai.com) Lattice-1 强制对齐模型驱动。
+> 面向 **[Claude Code](https://code.claude.com)** 的音频-文本对齐、转录、翻译、卡拉OK 与字幕工具箱 —— 同一份代码也可装入 **[OpenAI Codex CLI](https://github.com/openai/codex)** 与 **[Gemini CLI](https://github.com/google-gemini/gemini-cli)**。由 [LattifAI](https://lattifai.com) Lattice-1 强制对齐模型驱动。
 
 [English](./README.md) | **中文**
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
-[![Agent Skills](https://img.shields.io/badge/agent--skills-standard-2563eb)](https://agentskills.io)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-plugin-7c3aed)](https://code.claude.com/docs/en/plugins)
-[![Codex CLI](https://img.shields.io/badge/Codex-marketplace-10a37f)](https://github.com/openai/codex)
-[![Gemini CLI](https://img.shields.io/badge/Gemini_CLI-skills-4285f4)](https://github.com/google-gemini/gemini-cli)
 [![Skills](https://img.shields.io/badge/skills-9-10b981)](#技能一览)
 
-> 基于 [Agent Skills 开放标准](https://agentskills.io)。每个 `SKILL.md` 都是自包含的能力单元——任何监听 `skills/` 目录的 agent 都能加载（Claude Code、OpenAI Codex CLI、Gemini CLI，或任何后续遵循该标准的 agent）。
+每个 skill 遵循 [Agent Skills 开放标准](https://agentskills.io)——单个能力 = 单个自包含 `SKILL.md`，可被任何兼容 agent 发现并加载。Claude Code / Codex CLI / Gemini CLI 的安装命令均经实测验证，见下文。
 
 9 个可组合 skill，覆盖从 YouTube 链接到多语言、逐词高亮、生产级字幕的完整管线。
 
@@ -46,29 +43,30 @@ claude plugin install lattifai-skills@lattifai-skills
 
 ### 方式 B — OpenAI Codex CLI (`codex plugin marketplace`)
 
-同一份 `marketplace.json` 也可被 Codex CLI 直接复用：
+Codex CLI 接受同样的 `<owner>/<repo>` source 格式，会读取仓库根的 `.claude-plugin/marketplace.json`，注册一行命令搞定：
 
 ```bash
 codex plugin marketplace add lattifai/lattifai-skills
 ```
 
-Codex 的 `<owner>/<repo>` source 格式与 Claude Code 完全一致，因此 `.claude-plugin/marketplace.json` 元数据可零改动复用。
+Marketplace 信息会写入 `~/.codex/config.toml`，下次 codex 会话自动可见这些 skills——**无需独立 install 步骤**。
 
 ### 方式 C — Gemini CLI (`gemini skills install`)
 
-Gemini CLI 直接从 git URL 安装 skills，无需 plugin manifest：
+Gemini CLI 直接从 git URL 安装 skills。因为 skills 位于 `skills/<name>/SKILL.md`（而非仓库根），用 `--path skills` 一条命令装齐 9 个：
 
 ```bash
-gemini skills install https://github.com/lattifai/lattifai-skills
+# 一条命令装全 9 个 skills
+gemini skills install https://github.com/lattifai/lattifai-skills --path skills
 
-# 或针对本地 checkout 做实时调试：
+# 或针对本地 checkout 做实时调试（编辑即生效）
 git clone https://github.com/lattifai/lattifai-skills.git
 gemini skills link ./lattifai-skills/skills
 ```
 
 ### 方式 D — 任意其他 agent（拖入 `SKILL.md` 目录）
 
-每个 `skills/<name>/SKILL.md` 都自包含——agent 加载它不需要 plugin manifest。把目录直接拷到 agent 监听的位置即可：
+每个 `skills/<name>/` 目录都是符合 Agent Skills 标准的独立 skill——按需拷贝到 agent 监听的位置即可：
 
 ```bash
 git clone https://github.com/lattifai/lattifai-skills.git
@@ -92,7 +90,8 @@ mkdir -p .claude/skills && cp -r lattifai-skills/skills/lai-karaoke .claude/skil
 /plugin marketplace update lattifai-skills
 # Codex CLI:
 codex plugin marketplace upgrade lattifai-skills
-# Gemini CLI: 重新对 URL 运行 `skills install`
+# Gemini CLI:
+gemini skills install https://github.com/lattifai/lattifai-skills --path skills
 ```
 
 ---

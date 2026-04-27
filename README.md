@@ -1,17 +1,14 @@
 # lattifai-skills
 
-> Audio-text alignment, transcription, translation, karaoke, and subtitle toolkit for **agent-capable code LLMs** — powered by the [LattifAI](https://lattifai.com) Lattice-1 forced-alignment model.
+> Audio-text alignment, transcription, translation, karaoke, and subtitle toolkit for **[Claude Code](https://code.claude.com)** — and also installable in **[OpenAI Codex CLI](https://github.com/openai/codex)** and **[Gemini CLI](https://github.com/google-gemini/gemini-cli)**. Powered by the [LattifAI](https://lattifai.com) Lattice-1 forced-alignment model.
 
 **English** | [中文](./README.zh.md)
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
-[![Agent Skills](https://img.shields.io/badge/agent--skills-standard-2563eb)](https://agentskills.io)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-plugin-7c3aed)](https://code.claude.com/docs/en/plugins)
-[![Codex CLI](https://img.shields.io/badge/Codex-marketplace-10a37f)](https://github.com/openai/codex)
-[![Gemini CLI](https://img.shields.io/badge/Gemini_CLI-skills-4285f4)](https://github.com/google-gemini/gemini-cli)
 [![Skills](https://img.shields.io/badge/skills-9-10b981)](#skills)
 
-> Built on the [Agent Skills open standard](https://agentskills.io). Each `SKILL.md` is a self-contained capability that any agent watching a `skills/` directory can load — Claude Code, OpenAI Codex CLI, Gemini CLI, or any future agent that follows the standard.
+Each skill follows the [Agent Skills standard](https://agentskills.io) — a self-contained `SKILL.md` per capability that any compatible agent can discover and load. Verified install paths for Claude Code, Codex CLI, and Gemini CLI are documented below.
 
 9 composable skills cover the full pipeline from a raw YouTube URL to multilingual, per-word-highlighted, production-grade captions.
 
@@ -46,29 +43,30 @@ All skills become available under the plugin namespace:
 
 ### Option B — OpenAI Codex CLI (`codex plugin marketplace`)
 
-The same `marketplace.json` works with Codex CLI's plugin manager:
+Codex CLI accepts the same `<owner>/<repo>` source format and reads the `.claude-plugin/marketplace.json` at the repo root, so registration is one command:
 
 ```bash
 codex plugin marketplace add lattifai/lattifai-skills
 ```
 
-Codex's `<owner>/<repo>` source format is identical to Claude Code's, so the marketplace metadata at `.claude-plugin/marketplace.json` is reused as-is.
+The marketplace is registered in `~/.codex/config.toml` and skills become available in your next Codex session — no separate `install` step.
 
 ### Option C — Gemini CLI (`gemini skills install`)
 
-Gemini CLI installs skills directly from a git URL, no plugin manifest required:
+Gemini CLI installs skills directly from a git URL. Because the skills live under `skills/<name>/SKILL.md` (not at the repo root), pass `--path skills` to install all 9 in one call:
 
 ```bash
-gemini skills install https://github.com/lattifai/lattifai-skills
+# Install all 9 skills from the bundle
+gemini skills install https://github.com/lattifai/lattifai-skills --path skills
 
-# or for live development against a local checkout:
+# Or for live development against a local checkout (auto-reloads on edit)
 git clone https://github.com/lattifai/lattifai-skills.git
 gemini skills link ./lattifai-skills/skills
 ```
 
 ### Option D — Any other agent (drop-in `SKILL.md` directory)
 
-Every `skills/<name>/SKILL.md` is self-contained — no plugin manifest is required for an agent to load it. Drop the directory you want into whatever location your agent watches:
+Each `skills/<name>/` directory is a self-contained skill following the Agent Skills standard — copy whichever ones you want to wherever your agent watches:
 
 ```bash
 git clone https://github.com/lattifai/lattifai-skills.git
@@ -83,7 +81,7 @@ Common destinations:
 | Claude Code (personal) | `~/.claude/skills/<name>/SKILL.md` |
 | Cursor / Continue / custom agents | wherever your agent loads skills from |
 
-Edits to `.claude/skills/` are picked up live within the current Claude Code session — no reload command needed. For other agents, follow their reload conventions (`/reload-plugins` in CC for plugin-dir / marketplace sources; `gemini skills enable/disable` for Gemini; restart for agents without hot-reload).
+Edits to `.claude/skills/` are picked up live within the current Claude Code session — no reload command needed. Other agents follow their own conventions (`/reload-plugins` in CC for plugin-dir / marketplace sources; `gemini skills enable/disable` for Gemini; restart for agents without hot-reload).
 
 ### Update
 
@@ -92,7 +90,8 @@ Edits to `.claude/skills/` are picked up live within the current Claude Code ses
 /plugin marketplace update lattifai-skills
 # Codex CLI:
 codex plugin marketplace upgrade lattifai-skills
-# Gemini CLI: re-run `skills install` against the URL
+# Gemini CLI:
+gemini skills install https://github.com/lattifai/lattifai-skills --path skills
 ```
 
 ---

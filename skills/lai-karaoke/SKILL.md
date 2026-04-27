@@ -18,7 +18,7 @@ One command → per-word highlighted ASS ready for TikTok, Reels, Shorts, 抖音
 
 ## Zero-Arg Hero Path
 
-Invoke via your agent CLI (Claude Code, Codex CLI, Gemini CLI, …) — the agent automates the full chain:
+Invoke through your agent (in Claude Code: `/lai-karaoke <input>`; in Codex CLI / Gemini CLI: ask the agent to run `lai-karaoke` and pass the input). The agent then automates the full chain:
 
 ```
 /lai-karaoke https://youtu.be/VIDEO_ID
