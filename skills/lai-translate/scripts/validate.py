@@ -6,14 +6,18 @@ Structural invariants (format-agnostic):
   - start / end / duration unchanged (1 ms tolerance)
   - speaker labels unchanged
   - every output segment has non-empty text
+  - **output text differs from source text** for every segment — catches
+    silent translation drops (e.g. an SRT round-trip that re-spliced
+    source-only cue text over the rendered translation, leaving the file
+    structurally valid but content-wise unchanged).
 
 Format-specific: when both files are JSON (lossless), also verifies:
   - every supervision has a non-empty `translation` field
   - source `text` is preserved (bilingual workflow)
 
-For non-JSON outputs (SRT/VTT/ASS/…) the writer fuses translation into text,
-so `translation` / source-`text` preservation cannot be round-tripped and is
-not checked here. Run validation on JSON whenever possible.
+For non-JSON outputs (SRT/VTT/ASS/…) the writer fuses translation into text;
+the per-segment "text differs" check is the only signal that translation
+content actually made it into the file.
 
 Exits 0 on pass, 1 on failure.
 """
@@ -50,10 +54,22 @@ def compare(src: Caption, out: Caption, strict_text: bool) -> list[str]:
             errors.append(f"[{i}] empty output text")
 
         if strict_text:
+            # JSON-to-JSON bilingual workflow: source text preserved verbatim,
+            # translation carried in its own field.
             if (a.text or "") != (b.text or ""):
                 errors.append(f"[{i}] source text changed (expected bilingual JSON)")
             if not (b.translation and b.translation.strip()):
                 errors.append(f"[{i}] empty translation field")
+        else:
+            # Non-JSON output: writer fuses translation into text. The output
+            # text must differ from source — catches silent drops where the
+            # writer round-tripped the source-only cue back over the rendered
+            # translation (a real bug surfaced by the SRT raw-cue splice).
+            if (a.text or "").strip() == (b.text or "").strip():
+                errors.append(
+                    f"[{i}] output text identical to source — translation "
+                    f"may have been silently dropped"
+                )
     return errors
 
 

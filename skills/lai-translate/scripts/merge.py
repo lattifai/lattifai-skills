@@ -82,6 +82,14 @@ def main() -> int:
         if tr is None or not tr.strip():
             missing.append(idx)
             continue
+        # Defensive: drop the source-format raw-cue cache so that format
+        # writers (notably the SRT writer's `_splice_raw_cue_texts`) don't
+        # silently splice the cached source-only text back over our updated
+        # `sup.text` / `sup.translation`. Without this, both `replace` and
+        # `--bilingual` modes round-trip to a SRT that still shows only the
+        # original source text — i.e. the translation work is dropped.
+        if isinstance(getattr(sup, "custom", None), dict):
+            sup.custom.pop("srt_raw_text", None)
         if args.bilingual:
             # Keep sup.text as the source; attach translation for bilingual renderers.
             sup.translation = tr
