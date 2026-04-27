@@ -16,9 +16,9 @@ pip install lattifai --extra-index-url https://lattifai.github.io/pypi/simple/
 
 Requires Python 3.10+.
 
-## 2. Get a Free Trial Key
+## 2. Get a Free Trial Key — `lai auth trial`
 
-No sign-up. 2 hours of alignment credits, valid 7 days.
+> **For new users this is the only command you need.** It claims a no-sign-up trial (2 hours of alignment credits, valid 14 days). There is **no** `lai login` command — it's `lai auth trial` (new user) or `lai auth login` (existing paid account).
 
 ```bash
 lai auth trial
@@ -32,9 +32,11 @@ To double-check the environment any time: `lai doctor` (FAIL rows include a fix 
 
 | Problem | Fix |
 |---------|-----|
-| `pip` can't find lattifai | Re-run with `--extra-index-url https://lattifai.github.io/pypi/simple/` |
+| `pip` can't find lattifai or its dependency `lattifai-core` | Re-run with `--extra-index-url https://lattifai.github.io/pypi/simple/` (lattifai-core ships only on the LattifAI mirror) |
 | `lai auth trial` returns 429 | Trial already used on this device — run `lai auth login` for a full account |
-| API key invalid / expired | `lai auth logout`, then `lai auth trial` or `lai auth login` |
+| API key invalid / expired (trial expires after 14 days) | `lai auth logout`, then `lai auth trial` (new device) or `lai auth login` (paid account) |
+| `Couldn't load entrypoint <name>: No module named 'lattifai'` on `lai` startup | Stale editable install — `pip show lattifai` reveals `Editable project location: /path/that/no-longer-exists`. Run `pip uninstall -y lattifai lattifai-core lattifai-run k2py` then reinstall non-editable per Step 1 |
+| `lai` command runs but outputs `EXPIRES_AT` warning past today | Trial key expired — re-run `lai auth trial` (new key) |
 | Outdated package | `lai update` |
 
 ## Related Skills
