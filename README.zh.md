@@ -53,6 +53,8 @@ git clone https://github.com/lattifai/lattifai-skills.git
 claude --plugin-dir ./lattifai-skills
 ```
 
+修改 skill 后用 `/reload-plugins` 重新加载。
+
 ### 方式 C — 项目级 skill（拷贝到 `.claude/skills/`）
 
 如果你只需要部分 skill 且不想要 plugin 命名空间前缀，可以直接把单个 skill 拷进项目：
@@ -62,7 +64,7 @@ mkdir -p .claude/skills
 cp -r lattifai-skills/skills/lai-karaoke .claude/skills/
 ```
 
-这样调用时用 `/lai-karaoke`（无前缀），作用范围仅限当前项目。
+这样调用时用 `/lai-karaoke`（无前缀），作用范围仅限当前项目。**无需重载**——`.claude/skills/` 的改动在当前会话内自动生效。（`/reload-plugins` 仅用于 plugin-dir / marketplace 来源的 skills。）
 
 ### 更新
 

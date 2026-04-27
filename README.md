@@ -53,6 +53,8 @@ git clone https://github.com/lattifai/lattifai-skills.git
 claude --plugin-dir ./lattifai-skills
 ```
 
+After editing a skill, reload with `/reload-plugins`.
+
 ### Option C — Project-level skills (drop-in `.claude/skills`)
 
 If you only want a subset and don't need plugin namespacing, copy individual skills into your project:
@@ -62,7 +64,7 @@ mkdir -p .claude/skills
 cp -r lattifai-skills/skills/lai-karaoke .claude/skills/
 ```
 
-They will be invocable as `/lai-karaoke` (no namespace prefix) and scoped to the current project.
+They will be invocable as `/lai-karaoke` (no namespace prefix) and scoped to the current project. **No reload needed** — edits to `.claude/skills/` take effect within the current session automatically. (`/reload-plugins` is for plugin-dir / marketplace sources only.)
 
 ### Update
 
