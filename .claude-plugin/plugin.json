@@ -1,7 +1,7 @@
 {
   "name": "lattifai-skills",
   "description": "Audio-text alignment, transcription, translation, karaoke, and subtitle toolkit for Claude Code — powered by the LattifAI Lattice-1 forced-alignment model.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": {
     "name": "LattifAI",
     "email": "support@lattifai.com"

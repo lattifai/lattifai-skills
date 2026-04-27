@@ -1,3 +1,15 @@
+## [0.1.1](https://github.com/lattifai/lattifai-skills/compare/v0.1.0...v0.1.1) (2026-04-27)
+
+### Bug Fixes
+
+* **karaoke:** forbid cross-language karaoke + document KTV color direction ([84cb708](https://github.com/lattifai/lattifai-skills/commit/84cb708b6a749478956f5da15cadfaa1935ca020)), closes [#7](https://github.com/lattifai/lattifai-skills/issues/7)
+* **setup:** correct trial validity to 14 days + add dangling-install rescue ([44775ff](https://github.com/lattifai/lattifai-skills/commit/44775fffd1e81230064cb0a699bcf985ac9a56e4)), closes [#1](https://github.com/lattifai/lattifai-skills/issues/1) [#3](https://github.com/lattifai/lattifai-skills/issues/3) [#4](https://github.com/lattifai/lattifai-skills/issues/4)
+* **youtube:** document prefer_audio=false ⇒ output_format=mp4 + log redirection ([4f87822](https://github.com/lattifai/lattifai-skills/commit/4f87822bf928e3c5dbfefcdb9f6ab4b1c9f956d8)), closes [#5](https://github.com/lattifai/lattifai-skills/issues/5) [#6](https://github.com/lattifai/lattifai-skills/issues/6)
+
+### Documentation
+
+* **readme:** clarify reload semantics for project-level vs plugin skills ([853e392](https://github.com/lattifai/lattifai-skills/commit/853e39298034f29d8f2681e6eff0b9cd1fa9c35a))
+
 ## [0.1.0](https://github.com/lattifai/lattifai-skills/compare/v0.0.0...v0.1.0) (2026-04-26)
 
 ### Features
