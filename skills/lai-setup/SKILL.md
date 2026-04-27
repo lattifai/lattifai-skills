@@ -14,7 +14,9 @@ LattifAI aligns captions to audio at word-level precision. Two steps to get star
 pip install lattifai --extra-index-url https://lattifai.github.io/pypi/simple/
 ```
 
-Requires Python 3.10+.
+Requires Python 3.10+. **First install takes 5–15 minutes** on a typical broadband connection — `torch` (~80 MB), `onnxruntime`, `scipy`, `transformers`, and friends are all sizeable wheels. Subsequent installs in fresh envs are usually faster (pip wheel cache).
+
+You may see a cosmetic `WARNING: No metadata found ... Can't uninstall 'setuptools'` line during install — this is a known anaconda + pip interop quirk and is **safe to ignore**; the install still succeeds.
 
 ## 2. Get a Free Trial Key — `lai auth trial`
 
@@ -26,7 +28,13 @@ lai auth trial
 
 The output shows your credits and expiry. You're ready.
 
+> **API key is user-level, not env-level.** The credentials live in `~/.lattifai/config.toml` and are shared across every Python / conda env on the same machine. Switching to a fresh env does not require re-authenticating; running `lai auth trial` in a new env on a machine that already has an active trial returns *"You already have an active trial (expires …)"*. To rotate, run `lai auth logout` first.
+
 To double-check the environment any time: `lai doctor` (FAIL rows include a fix suggestion).
+
+**On `lai doctor` warnings:**
+- *Model cache: Stale – update needed* → not actionable; the alignment models are auto-prefetched on first `lai alignment` / `lai youtube align` run. The warning lifts itself once the prefetch completes.
+- *Package version: outdated* → run `lai update` to grab the latest CLI. Recommended monthly, or whenever a feature you need is in a newer release.
 
 ## Common Issues
 
