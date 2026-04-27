@@ -48,6 +48,7 @@ All use `key=value` syntax, dot-nested:
 - `caption.render.word_level=true` — per-word timestamps (needed for karaoke; pair with a JSON or ASS output)
 - `caption.output.path=./out.json` / `caption.output.format=json` — output destination
 - `media.prefer_audio=true` — audio-only download (faster, smaller)
+- `media.prefer_audio=false` — keep the video. **Pair with `media.output_format=mp4`** explicitly; `prefer_audio=false` alone may still emit audio-only output, which breaks downstream karaoke (no width/height for `probe_media.py`)
 - `media.output_dir=./downloads/` — where to save intermediate audio / vtt
 - `media.streaming_chunk_secs=300` — long-video chunking
 
@@ -90,6 +91,16 @@ laicap-convert -Y ./aligned.json ./aligned.karaoke.ass \
 
 For bilingual karaoke, run `/lai-translate` on `aligned.json` first (it preserves `words`), then run step 2 on the bilingual JSON.
 
+## Operational Tips
+
+For long alignments (Step 3 lattice search can take minutes on long-form video), redirect to a log file so you can see EXIT code and stderr after truncation:
+
+```bash
+lai youtube align -Y URL caption.output.path=./aligned.json ... > /tmp/lai_align.log 2>&1
+echo "EXIT=$?"
+tail -50 /tmp/lai_align.log
+```
+
 ## Common Issues
 
 | Problem | Fix |
@@ -100,6 +111,8 @@ For bilingual karaoke, run `/lai-translate` on `aligned.json` first (it preserve
 | Region-restricted | Use a VPN or fetch from an unrestricted region |
 | Age-restricted | `yt-dlp --cookies-from-browser chrome` to download, then `/lai-align` |
 | API key invalid | `/lai-setup` |
+| `media.prefer_audio=false` but downloaded file is still mp3 / m4a | Add `media.output_format=mp4` explicitly — they're separate flags |
+| `Couldn't load entrypoint youtube: No module named 'lattifai'` on `lai` startup | Stale editable install — see `/lai-setup` Common Issues |
 
 ## Related Skills
 
