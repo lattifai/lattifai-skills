@@ -1,75 +1,98 @@
 # lattifai-skills
 
-> 面向 [Claude Code](https://code.claude.com) 的音频-文本对齐、转录、翻译、卡拉OK 与字幕工具箱 —— 由 [LattifAI](https://lattifai.com) Lattice-1 强制对齐模型驱动。
+> 面向**支持 Agent 能力的代码 LLM** 的音频-文本对齐、转录、翻译、卡拉OK 与字幕工具箱 —— 由 [LattifAI](https://lattifai.com) Lattice-1 强制对齐模型驱动。
 
 [English](./README.md) | **中文**
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
-[![Claude Code Plugin](https://img.shields.io/badge/Claude_Code-plugin-7c3aed)](https://code.claude.com/docs/en/plugins)
+[![Agent Skills](https://img.shields.io/badge/agent--skills-standard-2563eb)](https://agentskills.io)
+[![Claude Code](https://img.shields.io/badge/Claude_Code-plugin-7c3aed)](https://code.claude.com/docs/en/plugins)
+[![Codex CLI](https://img.shields.io/badge/Codex-marketplace-10a37f)](https://github.com/openai/codex)
+[![Gemini CLI](https://img.shields.io/badge/Gemini_CLI-skills-4285f4)](https://github.com/google-gemini/gemini-cli)
 [![Skills](https://img.shields.io/badge/skills-9-10b981)](#技能一览)
 
-一行 `/plugin install` → 9 个可组合 skill，覆盖从 YouTube 链接到多语言、逐词高亮、生产级字幕的完整管线。
+> 基于 [Agent Skills 开放标准](https://agentskills.io)。每个 `SKILL.md` 都是自包含的能力单元——任何监听 `skills/` 目录的 agent 都能加载（Claude Code、OpenAI Codex CLI、Gemini CLI，或任何后续遵循该标准的 agent）。
+
+9 个可组合 skill，覆盖从 YouTube 链接到多语言、逐词高亮、生产级字幕的完整管线。
 
 ---
 
 ## 安装
 
-本仓库**既是 plugin，也是 plugin marketplace**。三种方式任选：
+按你使用的 agent 选择对应方式。
 
-### 方式 A — 通过 marketplace 安装（推荐）
+### 方式 A — Claude Code (`/plugin marketplace`)
 
-在 Claude Code 会话中注册 marketplace 并安装：
+本仓库根目录同时携带 plugin manifest 与 plugin marketplace。在 Claude Code 会话中：
 
 ```shell
 /plugin marketplace add lattifai/lattifai-skills
 /plugin install lattifai-skills@lattifai-skills
+/reload-plugins
 ```
 
-或使用非交互式 CLI：
+或非交互式：
 
 ```bash
 claude plugin marketplace add lattifai/lattifai-skills
 claude plugin install lattifai-skills@lattifai-skills
 ```
 
-安装后刷新以加载 skills：
-
-```shell
-/reload-plugins
-```
-
-所有 skill 会以 plugin 命名空间挂载：
+所有 skill 以 plugin 命名空间挂载：
 
 ```shell
 /lattifai-skills:lai-karaoke https://youtu.be/VIDEO_ID
 ```
 
-### 方式 B — 本地开发（`--plugin-dir`）
+### 方式 B — OpenAI Codex CLI (`codex plugin marketplace`)
 
-不注册 marketplace，直接加载本地目录用于测试：
+同一份 `marketplace.json` 也可被 Codex CLI 直接复用：
+
+```bash
+codex plugin marketplace add lattifai/lattifai-skills
+```
+
+Codex 的 `<owner>/<repo>` source 格式与 Claude Code 完全一致，因此 `.claude-plugin/marketplace.json` 元数据可零改动复用。
+
+### 方式 C — Gemini CLI (`gemini skills install`)
+
+Gemini CLI 直接从 git URL 安装 skills，无需 plugin manifest：
+
+```bash
+gemini skills install https://github.com/lattifai/lattifai-skills
+
+# 或针对本地 checkout 做实时调试：
+git clone https://github.com/lattifai/lattifai-skills.git
+gemini skills link ./lattifai-skills/skills
+```
+
+### 方式 D — 任意其他 agent（拖入 `SKILL.md` 目录）
+
+每个 `skills/<name>/SKILL.md` 都自包含——agent 加载它不需要 plugin manifest。把目录直接拷到 agent 监听的位置即可：
 
 ```bash
 git clone https://github.com/lattifai/lattifai-skills.git
-claude --plugin-dir ./lattifai-skills
+mkdir -p .claude/skills && cp -r lattifai-skills/skills/lai-karaoke .claude/skills/
 ```
 
-修改 skill 后用 `/reload-plugins` 重新加载。
+常见目标位置：
 
-### 方式 C — 项目级 skill（拷贝到 `.claude/skills/`）
+| Agent | 拖入路径 |
+|-------|----------|
+| Claude Code（项目级） | `.claude/skills/<name>/SKILL.md` |
+| Claude Code（个人） | `~/.claude/skills/<name>/SKILL.md` |
+| Cursor / Continue / 自定义 agent | 各自约定的 skills 目录 |
 
-如果你只需要部分 skill 且不想要 plugin 命名空间前缀，可以直接把单个 skill 拷进项目：
-
-```bash
-mkdir -p .claude/skills
-cp -r lattifai-skills/skills/lai-karaoke .claude/skills/
-```
-
-这样调用时用 `/lai-karaoke`（无前缀），作用范围仅限当前项目。**无需重载**——`.claude/skills/` 的改动在当前会话内自动生效。（`/reload-plugins` 仅用于 plugin-dir / marketplace 来源的 skills。）
+`.claude/skills/` 的改动在当前 Claude Code 会话内自动生效，无需重载命令。其他 agent 按各自约定（CC 的 `/reload-plugins` 只针对 plugin-dir / marketplace 来源；Gemini CLI 用 `gemini skills enable/disable`；不支持热重载的 agent 直接重启）。
 
 ### 更新
 
 ```shell
+# Claude Code:
 /plugin marketplace update lattifai-skills
+# Codex CLI:
+codex plugin marketplace upgrade lattifai-skills
+# Gemini CLI: 重新对 URL 运行 `skills install`
 ```
 
 ---
@@ -98,7 +121,7 @@ uv pip install --reinstall-package lattifai "lattifai[all]" \
 | 转录 | `pip install "lattifai[transcription]" --extra-index-url https://lattifai.github.io/pypi/simple/` | Gemini API key（`GEMINI_API_KEY`）、Parakeet / SenseVoice 模型 |
 | 字幕转换 | `pip install "lattifai[captions]" --extra-index-url https://lattifai.github.io/pypi/simple/`（或完整 `lattifai[all]`） | — |
 | 卡拉OK | `ffprobe`（用于自适应字号探测）；没有时回落到平台默认分辨率 | — |
-| 翻译 / 摘要 | 无外部依赖 —— 这两个 skill 直接使用 Claude Code 会话的 LLM | — |
+| 翻译 / 摘要 | 无外部依赖 —— 这两个 skill 直接使用所在 agent 会话的 LLM | — |
 
 首次使用请先跑 **`/lai-setup`** —— 它会安装 CLI、引导鉴权、申请免费试用 key。
 
@@ -125,7 +148,7 @@ uv pip install --reinstall-package lattifai "lattifai[all]" \
 
 ### 🤖 Agent-driven（LLM 驱动）
 
-以下 skill **不调用任何外部 LLM API** —— 它们直接使用当前 Claude Code 会话的模型能力。
+以下 skill **不调用任何外部 LLM API** —— 它们直接使用宿主 agent 会话的模型能力（Claude Code、Codex CLI、Gemini CLI 等）。
 
 | Skill | 一句话说明 |
 |-------|------------|
@@ -183,7 +206,7 @@ lattifai-skills/
 │       ├── SKILL.md
 │       └── scripts/{prepare,validate}.py
 ├── evals/                   # Skill 评测 / 测试样本
-├── CLAUDE.md                # 使用 Claude Code 协作开发的约定
+├── CLAUDE.md                # 仓库级约定（Claude Code 会自动加载）
 ├── CHANGELOG.md             # Keep a Changelog 格式；semantic-release 自动维护
 ├── LICENSE                  # MIT
 └── README.md / README.zh.md

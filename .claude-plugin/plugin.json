@@ -1,6 +1,6 @@
 {
   "name": "lattifai-skills",
-  "description": "Audio-text alignment, transcription, translation, karaoke, and subtitle toolkit for Claude Code — powered by the LattifAI Lattice-1 forced-alignment model.",
+  "description": "Audio-text alignment, transcription, translation, karaoke, and subtitle toolkit. Built on the Agent Skills standard — works in Claude Code, Codex CLI, Gemini CLI, and any agent that loads SKILL.md files. Powered by the LattifAI Lattice-1 forced-alignment model.",
   "version": "0.1.2",
   "author": {
     "name": "LattifAI",
