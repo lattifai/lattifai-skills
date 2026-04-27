@@ -81,8 +81,15 @@ cp -r lattifai-skills/skills/lai-karaoke .claude/skills/
 > **重要：**`lattifai` 包依赖 `lattifai-core`，后者只发布在 LattifAI 自建 PyPI 镜像。**安装时必须带上** `--extra-index-url https://lattifai.github.io/pypi/simple/`。
 
 ```bash
-# 推荐：完整安装（对齐 + 转录 + 字幕转换）
+# pip（默认；首次安装约 5–15 分钟）
 pip install "lattifai[all]" --extra-index-url https://lattifai.github.io/pypi/simple/
+
+# uv —— 推荐！约 10–15× 加速（宽带 ≈1 分钟）
+uv pip install "lattifai[all]" --extra-index-url https://lattifai.github.io/pypi/simple/
+uv pip install --reinstall-package lattifai "lattifai[all]" \
+    --extra-index-url https://lattifai.github.io/pypi/simple/
+# （第二条是修复一个 entry-point 名称冲突的 workaround——把 lattifai
+#  最后再装一次，确保它的 `lai` 命令脚本生效。详见 `/lai-setup`。）
 ```
 
 | Skill 组 | 必需 | 可选 |

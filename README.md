@@ -81,8 +81,16 @@ Different skills have different dependencies — install what you need.
 > **Important:** the `lattifai` package depends on `lattifai-core`, which is hosted on the LattifAI PyPI mirror. Always include `--extra-index-url https://lattifai.github.io/pypi/simple/` when installing.
 
 ```bash
-# Recommended: full install (alignment + transcription + captions)
+# pip (default, takes 5–15 min on first install)
 pip install "lattifai[all]" --extra-index-url https://lattifai.github.io/pypi/simple/
+
+# uv — recommended for ~10–15× faster install (≈1 min on broadband)
+uv pip install "lattifai[all]" --extra-index-url https://lattifai.github.io/pypi/simple/
+uv pip install --reinstall-package lattifai "lattifai[all]" \
+    --extra-index-url https://lattifai.github.io/pypi/simple/
+# (The second uv command is a workaround for a known entry-point name
+#  conflict — re-installs lattifai last so its `lai` console script wins.
+#  See `/lai-setup` for details.)
 ```
 
 | Skill group | Required | Optional |
