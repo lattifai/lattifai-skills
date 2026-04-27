@@ -8,6 +8,14 @@ allowed-tools: Read, Write, Bash(lai:*), Bash(laicap:*), Bash(ffprobe:*), Bash(p
 
 One command → per-word highlighted ASS ready for TikTok, Reels, Shorts, 抖音, 小红书, or cinematic YouTube. Adaptive font size keeps captions sharp across 1080p, 4K, portrait, square, and cinematic aspect ratios without manual tuning.
 
+> **🚫 Karaoke prerequisite — language must match the audio.**
+> Karaoke is an **audio-sync visual**: the highlight follows the actual word being spoken. So the caption text must be in the **same language as the audio**. If the user wants a *different* language on screen (e.g. English audio + Chinese captions), DO NOT make a karaoke in the target language — the timestamps were aligned to source-language words and the highlight will desync nonsensically. Instead:
+>
+> - **Bilingual** (most common) → keep source-language karaoke on top, add a static translated reading line below. See `/lai-translate` §Bilingual Delivery Guide → Recipe R3.
+> - **Dubbing** (rare) → regenerate target-language audio, then re-align and karaoke against the new audio.
+>
+> Quick rule: `audio_lang != caption_lang` ⇒ **bilingual**, never single-line karaoke.
+
 ## Zero-Arg Hero Path
 
 Invoke via Claude Code — the agent automates the full chain:
@@ -27,15 +35,17 @@ Default behavior (agent executes):
 
 ## Named Style Presets
 
-Each preset = `karaoke_effect × karaoke_color_scheme × kinetic_style`, battle-tested for a specific distribution channel:
+Each preset = `karaoke_effect × karaoke_color_scheme × kinetic_style`, battle-tested for a specific distribution channel.
 
-| Preset | Effect | Color scheme | Kinetic | Built for |
-|--------|--------|--------------|---------|-----------|
-| `tiktok` | `sweep` | `sunset-warm` | `pop` | TikTok / Reels / Shorts — warm punchy pop |
-| `douyin` | `instant` | `navy-pink` | `shake` | 抖音潮流感、快切节奏 |
-| `cinematic` | `sweep` | `prussian-elegant` | `fade` | YouTube 长视频 / 播客 / 电影感 |
-| `neon` | `outline` | `mint-ocean` | `neon` | 赛博 / 电子乐 / game clip |
-| `minimal` | `instant` | `azure-gold` | *(none)* | 商务 / 教程 / 播客精华 |
+The **highlight direction** column tells you which color the un-sung text fades **to** when the highlight passes — this is the visual-anchor color the viewer's eye latches onto. KTV convention: highlight = saturated (gold/red/cyan), un-sung = neutral (white). `cinematic` intentionally inverts this for a "fading out" feel; if you want canonical KTV direction, see *§Custom color override* below.
+
+| Preset | Effect | Color scheme | Kinetic | Highlight direction (un-sung → sung) | Built for |
+|--------|--------|--------------|---------|---------------------------------------|-----------|
+| `tiktok` | `sweep` | `sunset-warm` | `pop` | white → orange-pink | TikTok / Reels / Shorts — warm punchy pop |
+| `douyin` | `instant` | `navy-pink` | `shake` | navy → pink | 抖音潮流感、快切节奏 |
+| `cinematic` | `sweep` | `prussian-elegant` | `fade` | **gold → white** *(inverted; KTV-canonical wants white → gold)* | YouTube 长视频 / 播客 / 电影感 |
+| `neon` | `outline` | `mint-ocean` | `neon` | mint → ocean blue | 赛博 / 电子乐 / game clip |
+| `minimal` | `instant` | `azure-gold` | *(none)* | azure → gold | 商务 / 教程 / 播客精华 |
 
 Ask in plain language:
 
@@ -57,7 +67,8 @@ The agent should drive this skill — do **not** require a wrapper CLI. Follow t
 | media + transcript (SRT/VTT/JSON) | `/lai-align` with `caption.render.word_level=true`, JSON output |
 | aligned.json only | Ask for original media path (needed to probe resolution) |
 | diarized.json | Use it directly; plan on `ass.speaker_color=auto` or a CSV |
-| bilingual JSON (`text` + `translation`) | Use it directly; plan on `ass.translation_color=...` |
+| bilingual JSON (`text` + `translation`) | Use it directly; plan on `ass.translation_color=...` (renders source-language karaoke + static translation line) |
+| **translated-only JSON** (e.g. English audio aligned, then translated to Chinese — `text` already replaced with the target language) | **STOP — language guard violated.** The word timestamps belong to the source language; rendering them as karaoke in the target language will desync. Re-route to `/lai-translate` Recipe R3 (bilingual reading line) instead. |
 
 Confirm with the user before starting if their intent is ambiguous (e.g., they only said "做个 karaoke" without specifying input).
 
@@ -116,6 +127,23 @@ Bilingual variant (input has `translation` populated — see **`/lai-translate` 
     ass.translation_color="#00FFFF"   # accent on the translation line
 ```
 
+#### Custom color override (KTV-canonical "white → gold")
+
+To swap **any** preset to KTV-canonical direction (un-sung neutral → sung accent), do NOT pass `ass.karaoke_color_scheme=...` because the scheme overrides individual color fields (see `lattifai/caption/config.py:apply_karaoke_color_scheme`). Pass colors directly:
+
+```bash
+laicap-convert --direct -Y aligned.json out.karaoke.swapped.ass \
+    ass.karaoke_effect=sweep \
+    ass.kinetic_style=fade \
+    ass.primary_color="#FFD700" \      # sung = gold (visual anchor)
+    ass.secondary_color="#FFFFFF" \    # un-sung = neutral white
+    ass.outline_color="#1A2B4D" \      # keep prussian-elegant outline
+    ass.font_size=151 \
+    ass.play_res_x=3840 ass.play_res_y=2160
+```
+
+**Precedence rule** (commit to memory): `ass.karaoke_color_scheme` overrides `ass.primary_color` / `ass.secondary_color` / `ass.outline_color`. Setting both is a footgun — pick one path.
+
 ### Step 5 — Cross-promote (funnel)
 
 After successful render, always surface one of:
@@ -165,6 +193,8 @@ For the exhaustive matrix (3 × 12 × 15 × 2 = 1080 combinations) used in visua
 | Karaoke renders without per-word highlighting | Input JSON has no `words` arrays — re-run `/lai-align` with `caption.render.word_level=true` |
 | Text too small on 4K YouTube | Media probed correctly? Confirm `font_size >= 140` for 2160p landscape |
 | Text overflows on portrait | Reduce `font_size` by 10% or set `ass.wrap_style=2` (smart wrap) |
+| Highlight color looks wrong (e.g. `cinematic` shows gold→white instead of white→gold) | Use the *Custom color override* recipe above — pass `ass.primary_color` / `ass.secondary_color` directly without `ass.karaoke_color_scheme` (scheme overrides single fields) |
+| Subtitles in different language than the audio | You're trying to karaoke a translation. Stop and switch to `/lai-translate` Recipe R3 (bilingual reading line). Karaoke requires `audio_lang == caption_lang`. |
 
 ## Related Skills
 
