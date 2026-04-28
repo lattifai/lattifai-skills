@@ -1,3 +1,18 @@
+## [0.2.0](https://github.com/lattifai/lattifai-skills/compare/v0.1.2...v0.2.0) (2026-04-28)
+
+### Features
+
+* **skills:** adopt cwd file-path convention across all skills ([4ab9c84](https://github.com/lattifai/lattifai-skills/commit/4ab9c8432df782b86363f93bdf09b63e77f3e477))
+
+### Bug Fixes
+
+* **docs:** correct Gemini install path + finalize multi-agent positioning ([8d335a8](https://github.com/lattifai/lattifai-skills/commit/8d335a849a80f0f54420eac21627e2ef46c9f979))
+* **translate:** defensive srt_raw_text pop + content drift check in validator ([8a4c3f4](https://github.com/lattifai/lattifai-skills/commit/8a4c3f42712d6ea137a7b4cc6108e01e3b66c029))
+
+### Documentation
+
+* position lattifai-skills as agent-agnostic (Agent Skills standard) ([837471c](https://github.com/lattifai/lattifai-skills/commit/837471c1dca030590dcb77ae999dea1dc6c6eb5c))
+
 ## [0.1.2](https://github.com/lattifai/lattifai-skills/compare/v0.1.1...v0.1.2) (2026-04-27)
 
 ### Bug Fixes
