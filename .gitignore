@@ -5,3 +5,4 @@ evals/
 node_modules/
 package-lock.json
 .npmrc
+.DS_Store
