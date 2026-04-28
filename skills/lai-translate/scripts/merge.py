@@ -19,7 +19,9 @@ Output modes (selected by `--bilingual`):
     writers that support bilingual rendering (SRT, VTT, ASS, JSON) will emit
     two lines per segment.
 
-Default output path: `<source_stem>_<LanguageName>.<ext>` next to the source.
+Default output path follows the repo-wide convention `<base>.<lang>[.translated]<ext>`
+next to the source — e.g. `podcast.aligned.json` translated to Chinese yields
+`podcast.zh.json` (replace) or `podcast.zh.translated.json` (bilingual).
 """
 from __future__ import annotations
 
@@ -30,19 +32,28 @@ from pathlib import Path
 
 from lattifai.caption import Caption
 
-LANG_NAMES = {
-    "zh": "Chinese", "zh-CN": "Chinese", "zh-TW": "TraditionalChinese",
-    "ja": "Japanese", "ko": "Korean",
-    "en": "English", "fr": "French", "es": "Spanish", "de": "German",
-    "pt": "Portuguese", "it": "Italian", "ru": "Russian", "ar": "Arabic",
-    "hi": "Hindi", "nl": "Dutch", "vi": "Vietnamese", "th": "Thai",
-    "id": "Indonesian", "tr": "Turkish", "pl": "Polish",
-}
+# Pipeline-stage suffixes the convention strips when deriving <base> from the
+# source filename (so `podcast.aligned.json` → base = `podcast`, not
+# `podcast.aligned`). Keep this list narrow on purpose — only the official
+# pipeline stages produced by other skills.
+_STRIP_STEMS = (".aligned", ".transcript", ".diarized", ".translation")
 
 
-def default_output_path(source: Path, target_lang: str) -> Path:
-    suffix = LANG_NAMES.get(target_lang, target_lang)
-    return source.with_name(f"{source.stem}_{suffix}{source.suffix}")
+def default_output_path(source: Path, target_lang: str, bilingual: bool) -> Path:
+    """Convention: `<base>.<lang>[.translated]<ext>` next to the source.
+
+    `<base>` is `source.stem` with any pipeline-stage suffix stripped.
+    `<lang>` is the ISO code passed in; we no longer rewrite to a
+    language-name spelling because the filename should be greppable
+    against the `target_lang` field that produced it.
+    """
+    base = source.stem
+    for stage in _STRIP_STEMS:
+        if base.endswith(stage):
+            base = base[: -len(stage)]
+            break
+    suffix = ".translated" if bilingual else ""
+    return source.with_name(f"{base}.{target_lang}{suffix}{source.suffix}")
 
 
 def main() -> int:
@@ -112,7 +123,7 @@ def main() -> int:
     else:
         caption.language = target_lang
 
-    output = args.output or default_output_path(args.source, target_lang)
+    output = args.output or default_output_path(args.source, target_lang, args.bilingual)
     caption.write(output)
     mode = "bilingual" if args.bilingual else "replace"
     print(f"Wrote {n} segments ({mode} mode, target_lang={target_lang}) → {output}")

@@ -18,17 +18,23 @@ lai config set GEMINI_API_KEY <your-key>
 
 ## Basic Command
 
+Pick a `<base>` (media stem or YouTube ID) and reuse for the rest of the pipeline; outputs land in the current directory:
+
 ```bash
-lai transcribe run audio.wav output.srt
+# <base> = podcast (from podcast.mp3)
+lai transcribe run podcast.mp3 podcast.transcript.json
 # shortcut:
-lai-transcribe audio.wav output.srt
+lai-transcribe podcast.mp3 podcast.transcript.json
 ```
 
 Gemini accepts YouTube URLs directly — no download needed:
 
 ```bash
-lai transcribe run "https://youtu.be/VIDEO_ID" output.json
+# <base> = la0CaZ2R8EY (the YouTube video ID)
+lai transcribe run "https://youtu.be/la0CaZ2R8EY" la0CaZ2R8EY.transcript.json
 ```
+
+**Output naming**: prefer `<base>.transcript.json` so it pipes cleanly into `/lai-align` (which writes `<base>.aligned.json`). Use `<base>.srt` etc. when the transcript itself is the final deliverable and no alignment step follows.
 
 ## Models
 

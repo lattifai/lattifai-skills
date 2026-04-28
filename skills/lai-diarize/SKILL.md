@@ -11,10 +11,12 @@ Adds `speaker` labels to aligned captions. Speaker **detection** (who speaks whe
 
 ## Basic Command
 
+`<base>` = source media stem (e.g. `podcast` from `podcast.mp3`) or YouTube ID. Files all land in the current directory:
+
 ```bash
-lai diarize run audio.mp3 aligned.json diarized.json
+lai diarize run podcast.mp3 podcast.aligned.json podcast.diarized.json
 # shortcut:
-lai-diarize audio.mp3 aligned.json diarized.json
+lai-diarize podcast.mp3 podcast.aligned.json podcast.diarized.json
 ```
 
 Output labels detected speakers as `SPEAKER_00`, `SPEAKER_01`, …
@@ -66,7 +68,7 @@ When the agent is not in the loop (batch pipelines, CI, unattended scripts), let
 lai config set diarization.llm.model_name gemini-3-flash-preview    # one-time
 # Gemini key: see /lai-transcribe
 lai diarize run --direct -Y \
-    podcast.mp3 aligned.json diarized.json \
+    podcast.mp3 podcast.aligned.json podcast.diarized.json \
     diarization.infer_speakers=true \
     diarization.llm.reasoning=true
 ```
@@ -77,10 +79,10 @@ lai diarize run --direct -Y \
 You can also pass hints at invocation time without any LLM:
 
 ```bash
-lai diarize run podcast.mp3 aligned.json diarized.json \
+lai diarize run podcast.mp3 podcast.aligned.json podcast.diarized.json \
     context="Host: Alice Chen (tech journalist), Guest: Bob Smith (AI researcher)"
 # or point at a meta.md (first positional `context` arg also accepts a file path):
-lai diarize run podcast.mp3 aligned.json diarized.json context=episode.meta.md
+lai diarize run podcast.mp3 podcast.aligned.json podcast.diarized.json context=podcast.meta.md
 ```
 
 ## Output

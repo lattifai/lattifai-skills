@@ -14,17 +14,20 @@ Convert, shift, and style caption files. Format is auto-detected from file exten
 
 `laicap-convert` (== `lai caption convert`) takes two positional args: `input_path` and `output_path`. All styling/rendering keys are **flat top-level config** (`render.*`, `ass.*`), **not** `caption.*`.
 
+All examples assume a single `<base>` (media stem or YouTube ID) reused across the pipeline; outputs land in the current directory.
+
 ```bash
-laicap-convert input.srt output.vtt
+# <base> = podcast
+laicap-convert podcast.srt podcast.vtt
 ```
 
 Common pairs:
 
 ```bash
-laicap-convert aligned.json video.srt           # JSON → playback formats
-laicap-convert video.srt video.ass              # basic → styled
-laicap-convert transcript.md transcript.srt     # Gemini markdown → SRT
-laicap-convert aligned.json aligned.TextGrid    # → Praat
+laicap-convert podcast.aligned.json podcast.srt        # JSON → playback formats
+laicap-convert podcast.srt podcast.ass                 # basic → styled
+laicap-convert podcast.transcript.md podcast.srt       # Gemini markdown → SRT
+laicap-convert podcast.aligned.json podcast.TextGrid   # → Praat
 ```
 
 Add `-Y` for non-interactive runs. Use `input_format=srt` (top-level flag) to override auto-detection when the extension is wrong.
@@ -32,8 +35,8 @@ Add `-Y` for non-interactive runs. Use `input_format=srt` (top-level flag) to ov
 ## Shift Timing
 
 ```bash
-laicap-shift input.srt output.srt 2.5     # forward 2.5 s
-laicap-shift input.srt output.srt -1.0    # backward 1 s
+laicap-shift podcast.srt podcast.shifted.srt 2.5     # forward 2.5 s
+laicap-shift podcast.srt podcast.shifted.srt -1.0    # backward 1 s
 ```
 
 ## ASS Styling
@@ -41,7 +44,7 @@ laicap-shift input.srt output.srt -1.0    # backward 1 s
 Top-level `ass.*` keys (see `lai caption convert --help` for the full list):
 
 ```bash
-laicap-convert input.srt output.ass \
+laicap-convert podcast.srt podcast.ass \
     ass.font_name="Noto Sans CJK SC" \
     ass.font_size=48 \
     ass.primary_color="#FFFFFF"
@@ -52,7 +55,7 @@ laicap-convert input.srt output.ass \
 Requires word-level JSON input (produced by `/lai-align` with `caption.render.word_level=true`, or `/lai-youtube` with the same flag — the upstream flag populates `words` arrays in the JSON).
 
 ```bash
-laicap-convert aligned.json out.ass \
+laicap-convert podcast.aligned.json podcast.karaoke.ass \
     ass.karaoke_effect=sweep \
     ass.karaoke_color_scheme=azure-gold
 ```
@@ -74,7 +77,9 @@ laicap-convert aligned.json out.ass \
 Format selection, typography conventions (line order / color / font-size ratio), and four scenario recipes (learning SRT / social ASS / karaoke / dual-track upload) all live in **`/lai-translate` §Bilingual Delivery Guide** — don't duplicate. Minimal one-liner for a bilingual JSON from `/lai-translate`:
 
 ```bash
-laicap-convert aligned_bilingual.json out.ass \
+# `<base>.translated.json` is the merged JSON (source + translation) from
+# `/lai-translate merge.py --bilingual`.
+laicap-convert podcast.translated.json podcast.zh.translated.ass \
     ass.primary_color="#FFFFFF" \
     ass.translation_color="#FFC209"
 ```

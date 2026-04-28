@@ -33,39 +33,41 @@ Any violation is a bug; `validate.py` enforces them.
 
 ### Workflow
 
+`<base>` = source media stem (e.g. `podcast` from `podcast.mp3`) or YouTube video ID. Files all land in the current directory:
+
 ```bash
 # 1. Split the source into agent-sized chunks (JSON, stripped to essentials)
-python skills/lai-translate/scripts/chunk.py video.srt --chunk-size 30 -o chunks.json
+python skills/lai-translate/scripts/chunk.py podcast.aligned.json --chunk-size 30 -o podcast.chunks.json
 
-# 2. Agent translates each chunk and writes translated.json:
+# 2. Agent translates each chunk and writes <base>.translation.json:
 #    {"target_lang": "zh",
 #     "items": [{"idx": 0, "translation": "..."}, ...]}
 
 # 3. Merge translations back into the source format
-#    replace mode (default) — produces a standalone zh SRT:
-python skills/lai-translate/scripts/merge.py video.srt translated.json
+#    replace mode (default) — produces a standalone <lang> SRT:
+python skills/lai-translate/scripts/merge.py podcast.aligned.json podcast.translation.json -o podcast.zh.srt
 #    bilingual mode — source + translation lines (SRT/VTT/ASS/JSON):
-python skills/lai-translate/scripts/merge.py video.srt translated.json --bilingual -o video_bilingual.srt
+python skills/lai-translate/scripts/merge.py podcast.aligned.json podcast.translation.json --bilingual -o podcast.zh.translated.srt
 
 # 4. Validate invariants
-python skills/lai-translate/scripts/validate.py video.srt video_Chinese.srt
+python skills/lai-translate/scripts/validate.py podcast.aligned.json podcast.zh.translated.srt
 ```
 
-Default output path: `<source_stem>_<LanguageName>.<ext>` next to the source.
+If `-o` is omitted, `merge.py` derives `<base>.<lang>[.translated]<ext>` automatically (e.g. `podcast.aligned.json` translated to `zh` yields `podcast.zh.json` / `podcast.zh.translated.json`). Pipeline-stage suffixes (`.aligned`, `.transcript`, `.diarized`, `.translation`) are stripped from the source stem to recover a clean `<base>`.
 
 ### Agent responsibilities inside step 2
 
 1. Read the source (and ideally a few surrounding chunks) to lock terminology and register
 2. Translate each item, keeping speaker voice distinct and non-speech events intact
 3. **Refined mode**: review each chunk against accuracy / naturalness / terminology / voice; revise failures
-4. Emit `translated.json` with `idx` matching the source — do not add/remove/reorder items
+4. Emit `<base>.translation.json` with `idx` matching the source — do not add/remove/reorder items
 
 ## Secondary Path (CLI, headless)
 
 The CLI subcommand is `lai translate caption` (not `lai translate run`); `input` / `output` are positional:
 
 ```bash
-lai translate caption input.srt output.srt \
+lai translate caption podcast.aligned.json podcast.zh.srt \
     translation.target_lang=zh \
     translation.mode=normal
 ```
@@ -104,16 +106,16 @@ This guide is the canonical reference for bilingual captions. `/lai-caption` and
 
 ### 3. Recipes
 
-All four recipes assume `aligned.json` exists (produced by `/lai-align` or `/lai-youtube`) and the agent has produced `translated.json` via step 2 of the §Primary Path.
+All four recipes assume `<base>.aligned.json` exists (produced by `/lai-align` or `/lai-youtube`) and the agent has produced `<base>.translation.json` via step 2 of the §Primary Path. Pick `<base>` once (media stem or YouTube ID) and reuse.
 
 **R1 — Language-learning SRT (dual-line, universal player)**
 
 ```bash
 python skills/lai-translate/scripts/merge.py \
-    aligned.json translated.json \
-    --bilingual -o video.zh-bilingual.srt
+    podcast.aligned.json podcast.translation.json \
+    --bilingual -o podcast.zh.translated.srt
 python skills/lai-translate/scripts/validate.py \
-    aligned.json video.zh-bilingual.srt
+    podcast.aligned.json podcast.zh.translated.srt
 ```
 
 Default: source on top, translation below. Works in VLC, YouTube upload, PotPlayer, mpv, Premiere.
@@ -123,13 +125,13 @@ Default: source on top, translation below. Works in VLC, YouTube upload, PotPlay
 ```bash
 # First merge into bilingual JSON (preserves words + translation)
 python skills/lai-translate/scripts/merge.py \
-    aligned.json translated.json \
-    --bilingual -o aligned_bilingual.json
+    podcast.aligned.json podcast.translation.json \
+    --bilingual -o podcast.translated.json
 
 # Then render ASS — MUST set karaoke_effect for translation_color to take effect
 # (see "Rendering constraint" below). `instant` = zero animation, just the dual-
 # color output we want for social.
-laicap-convert --direct -Y aligned_bilingual.json out.ass \
+laicap-convert --direct -Y podcast.translated.json podcast.zh.translated.ass \
     ass.karaoke_effect=instant \
     ass.primary_color="#FFFFFF" \
     ass.translation_color="#FFC209" \
@@ -148,7 +150,7 @@ For portrait 9:16 use `ass.font_size=86`, landscape 16:9 `76`, 4K landscape `151
 Route through `/lai-karaoke` — it handles aspect-aware font sizing, presets, and the `ass.translation_color` wiring. Quick form:
 
 ```bash
-laicap-convert --direct -Y aligned_bilingual.json out.karaoke.ass \
+laicap-convert --direct -Y podcast.translated.json podcast.karaoke.zh.translated.ass \
     ass.karaoke_effect=sweep \
     ass.karaoke_color_scheme=azure-gold \
     ass.translation_color="#00FFFF" \
@@ -158,12 +160,12 @@ laicap-convert --direct -Y aligned_bilingual.json out.karaoke.ass \
 **R4 — Two independent tracks (platform upload)**
 
 ```bash
-# Source-language SRT — skip translation entirely, just convert aligned.json
-laicap-convert --direct -Y aligned.json video.en.srt
+# Source-language SRT — skip translation entirely, just convert <base>.aligned.json
+laicap-convert --direct -Y podcast.aligned.json podcast.en.srt
 
 # Target-language SRT — merge WITHOUT --bilingual (replace mode)
 python skills/lai-translate/scripts/merge.py \
-    aligned.json translated.json -o video.zh.srt
+    podcast.aligned.json podcast.translation.json -o podcast.zh.srt
 ```
 
 Upload both files as separate subtitle tracks. This is what YouTube / Bilibili multi-language upload and Netflix TTG workflows expect — dual-line merged files get rejected at QC.

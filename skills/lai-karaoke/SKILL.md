@@ -27,10 +27,10 @@ Invoke through your agent (in Claude Code: `/lai-karaoke <input>`; in Codex CLI 
 ```
 
 Default behavior (agent executes):
-1. `/lai-youtube` with `caption.input.split_sentence=true caption.render.word_level=true` (clean per-word alignment, MP4 for resolution probe)
+1. `/lai-youtube` with `caption.input.split_sentence=false caption.render.word_level=true` (per-word alignment, MP4 for resolution probe; flip to `split_sentence=true` if auto-captions break mid-sentence)
 2. `scripts/probe_media.py` reads the downloaded mp4 and computes `font_size`, `play_res_x`, `play_res_y`
 3. Aspect-aware preset auto-selected (portrait → `tiktok`, landscape → `cinematic`, square → `minimal`) — the agent announces the choice and accepts an override
-4. `laicap-convert` writes `<video_id>.karaoke.<preset>.ass` alongside the media
+4. `laicap-convert` writes `<base>.karaoke.<preset>.ass` in the current directory (`<base>` = video ID for YouTube input, media stem for local files)
 5. Agent finishes with a cross-promo — multilingual (`/lai-translate`), custom tuning (`/lai-caption`), or speaker-colored (`/lai-diarize`)
 
 ## Named Style Presets
@@ -63,7 +63,7 @@ The agent should drive this skill — do **not** require a wrapper CLI. Follow t
 
 | User provides | Next |
 |---------------|------|
-| YouTube URL | `/lai-youtube align` with `caption.input.split_sentence=true caption.render.word_level=true`, MP4 output |
+| YouTube URL | `/lai-youtube align` with `caption.input.split_sentence=false caption.render.word_level=true`, MP4 output |
 | media + transcript (SRT/VTT/JSON) | `/lai-align` with `caption.render.word_level=true`, JSON output |
 | aligned.json only | Ask for original media path (needed to probe resolution) |
 | diarized.json | Use it directly; plan on `ass.speaker_color=auto` or a CSV |
@@ -101,7 +101,7 @@ Map preset → ASS config, then call `laicap-convert`:
 # render.word_level is default word-scope — karaoke_effect alone triggers per-word \k.
 # Only pass render.word_level=false when you want line-scope (single override per line).
 laicap-convert --direct -Y \
-    aligned.json output.karaoke.ass \
+    la0CaZ2R8EY.aligned.json la0CaZ2R8EY.karaoke.tiktok.ass \
     render.include_speaker_in_text=true \
     ass.karaoke_effect=sweep \
     ass.karaoke_color_scheme=sunset-warm \
@@ -132,7 +132,7 @@ Bilingual variant (input has `translation` populated — see **`/lai-translate` 
 To swap **any** preset to KTV-canonical direction (un-sung neutral → sung accent), do NOT pass `ass.karaoke_color_scheme=...` because the scheme overrides individual color fields (see `lattifai/caption/config.py:apply_karaoke_color_scheme`). Pass colors directly:
 
 ```bash
-laicap-convert --direct -Y aligned.json out.karaoke.swapped.ass \
+laicap-convert --direct -Y la0CaZ2R8EY.aligned.json la0CaZ2R8EY.karaoke.swapped.ass \
     ass.karaoke_effect=sweep \
     ass.kinetic_style=fade \
     ass.primary_color="#FFD700" \      # sung = gold (visual anchor)
@@ -174,7 +174,7 @@ Override knobs for the agent:
 
 ## Output Convention
 
-Default output path: `<media_stem>.karaoke[.<style>].ass` alongside the media. Multi-style exports coexist, e.g.:
+Default output path: `<base>.karaoke[.<style>].ass` in the current directory (`<base>` = video ID or media stem). Multi-style exports coexist, e.g.:
 
 ```
 la0CaZ2R8EY.mp4

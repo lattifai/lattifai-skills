@@ -43,14 +43,16 @@ Free-form notes below the frontmatter are fine.
 
 ### Workflow
 
+`<base>` = source media stem (e.g. `podcast` from `podcast.mp3`) or YouTube ID. Files all land in the current directory:
+
 ```bash
 # 1. Build an agent-ready prompt input from the source + meta.md
-python skills/lai-summarize/scripts/prepare.py episode.srt -o prompt_input.md
+python skills/lai-summarize/scripts/prepare.py podcast.aligned.json -o podcast.prompt_input.md
 
-# 2. Agent reads prompt_input.md and writes summary.md following the schema below.
+# 2. Agent reads <base>.prompt_input.md and writes <base>.summary.md per the schema below.
 
 # 3. Validate frontmatter, chapters, and verbatim quotes
-python skills/lai-summarize/scripts/validate.py episode.srt summary.md
+python skills/lai-summarize/scripts/validate.py podcast.aligned.json podcast.summary.md
 ```
 
 `prepare.py` produces a transcript with `[MM:SS]` timestamps and speaker labels, plus a `# Meta` block that marks `meta.md` chapters as **HARD CONSTRAINT** when present.
@@ -99,7 +101,7 @@ Requires `pyyaml` (stdlib `argparse` / `re` otherwise).
 The CLI takes two positional args (`input`, `output`); there is no `-o`:
 
 ```bash
-lai summarize caption input.json summary.md
+lai summarize caption podcast.aligned.json podcast.summary.md
 ```
 
 Configure an LLM backend once (required for this path only):

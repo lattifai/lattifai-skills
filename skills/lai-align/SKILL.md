@@ -10,27 +10,30 @@ Produces word-level and segment-level timestamps with sub-frame accuracy. Requir
 
 ## Basic Command
 
-Positional args are `input_media`, `input_caption`, `output_caption`. Both shorthand styles work:
+Positional args are `input_media`, `input_caption`, `output_caption`. Pick a `<base>` (the media stem or YouTube ID) and reuse it; outputs land in the current directory:
 
 ```bash
-lai alignment align audio.wav caption.srt output.srt
+# <base> = podcast (from podcast.mp3)
+lai alignment align podcast.mp3 podcast.srt podcast.aligned.json
 # shortcut:
-lai-align audio.wav caption.srt output.srt
+lai-align podcast.mp3 podcast.srt podcast.aligned.json
 # or explicit key=value style (interchangeable, useful inside scripts):
 lai alignment align --direct -Y \
-    input_media=audio.wav \
-    input_caption=caption.srt \
-    output_caption=output.json \
-    caption.input.split_sentence=true
+    input_media=podcast.mp3 \
+    input_caption=podcast.srt \
+    output_caption=podcast.aligned.json \
+    caption.input.split_sentence=false
 ```
 
 Format is inferred from the output file extension (30+ formats — see `/lai-caption`). Add `--direct -Y` for non-interactive pipeline runs.
+
+**Output naming**: prefer `<base>.aligned.json` for downstream pipelines (karaoke / translate / diarize all consume aligned JSON). Use `<base>.srt` etc. only when the alignment result is the final deliverable.
 
 ## Common Options
 
 Append as `key=value` pairs:
 
-- `caption.input.split_sentence=true` — re-segment into natural sentences (wtpsplit). **Recommended for YouTube auto-captions, karaoke, translation, and summarization** (clean sentence boundaries almost always improve the result). Skip it only when the user explicitly needs the source file's original cue boundaries preserved (e.g., re-aligning a hand-crafted SRT for broadcast)
+- `caption.input.split_sentence=false` *(default in examples)* — preserve the source caption's original cue boundaries. Set to `true` to re-segment into natural sentences via wtpsplit; useful when the source has mid-sentence cue breaks (typical for YouTube auto-captions) and you want clean segments for downstream karaoke / translation / summarization
 - `caption.render.word_level=true` — keep per-word timestamps in the output (needed for karaoke; use a JSON or ASS output path)
 - `media.streaming_chunk_secs=300` — process audio >10 min with bounded memory (up to 20 h)
 - `alignment.device=auto` — override auto device (cuda/mps/cpu)
