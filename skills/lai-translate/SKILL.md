@@ -1,6 +1,6 @@
 ---
 name: lai-translate
-description: Translate captions into another language (or produce bilingual captions) while preserving segment count, timing, and speaker labels. **Primary path uses this session's LLM directly — no API key, no model config.** Trigger on "translate captions", "翻译字幕", "翻译成中文/英文", "make bilingual subtitles", or "translate this" when working with caption files. CLI `lai translate run` is the secondary path for headless / oversized runs.
+description: Translate captions into another language (or produce bilingual captions) while preserving segment count, timing, speaker labels, AND source punctuation density (no inserted em-dashes, parentheses, or bracketed glosses unless the source had them — downstream rendering shows every character). **Primary path uses this session's LLM directly — no API key, no model config.** Trigger on "translate captions", "翻译字幕", "翻译成中文/英文", "make bilingual subtitles", or "translate this" when working with caption files. CLI `lai translate run` is the secondary path for headless / oversized runs.
 ---
 
 # Caption Translator
@@ -61,6 +61,38 @@ If `-o` is omitted, `merge.py` derives `<base>.<lang>[.translated]<ext>` automat
 2. Translate each item, keeping speaker voice distinct and non-speech events intact
 3. **Refined mode**: review each chunk against accuracy / naturalness / terminology / voice; revise failures
 4. Emit `<base>.translation.json` with `idx` matching the source — do not add/remove/reorder items
+
+### Punctuation parity (HARD rule)
+
+Do NOT inject punctuation absent from the source. Production audit on a
+sister pipeline (14 k zh supervisions): 16 % had `——` em-dashes added to
+sentences whose source contained no dash, and ~24 cases added parentheses
+that were never spoken. Both deform delivery — em-dashes force a hard
+pause, parentheses get rendered or read as an aside.
+
+When the source has none of them, the translation must not introduce any of:
+
+- `——` / `—` double or single em-dash
+- `--` ASCII double-hyphen
+- `（…）` / `(…)` parentheses (full-width or half-width)
+- `【…】` / `[…]` brackets
+
+Rewrite with the connector the source already implies (period, comma,
+"because" / "也就是" / "因为", clause split). Examples:
+
+```
+src: "I think it's nextgen because these things go crazy."
+✗   "我觉得那就是下一代打法——这些东西就是会疯传。"
+✓   "我觉得那就是下一代打法，因为这些东西就是会疯传。"
+
+src: "the demultiplexer or demux."
+✗   "解复用器（也叫 demux）。"
+✓   "解复用器，也叫 demux。"
+```
+
+`validate.py` flags these as `punct_drift_*` warnings (stderr), but the
+agent should not produce them in the first place — the validator is a
+safety net, not an excuse.
 
 ## Secondary Path (CLI, headless)
 
