@@ -1,3 +1,13 @@
+## [0.3.0](https://github.com/lattifai/lattifai-skills/compare/v0.2.0...v0.3.0) (2026-05-15)
+
+### Features
+
+* **translate:** forbid added em-dashes and parentheses ([0a51f69](https://github.com/lattifai/lattifai-skills/commit/0a51f69927737449a7a442e112a746095b524389))
+
+### Documentation
+
+* **lai-diarize:** forward-search + meta.md context expansion ([830b73a](https://github.com/lattifai/lattifai-skills/commit/830b73ac3f1d6a272b4f6cbe506b8c3d52c692e9))
+
 ## [0.2.0](https://github.com/lattifai/lattifai-skills/compare/v0.1.2...v0.2.0) (2026-04-28)
 
 ### Features
